@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    # profile에 따라 Oracle/SQLite 설정 분기
+    url: jdbc:sqlite:sample.db
+    driver-class-name: org.sqlite.JDBC
+
+jwt:
+  secret: my-super-secure-secret-key-1234567890abcdef
+
