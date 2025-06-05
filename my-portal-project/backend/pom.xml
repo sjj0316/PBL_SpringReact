@@ -31,52 +31,60 @@
 	</properties>
 	<dependencies>
 
-		<!-- ✅ Spring Boot 핵심 기능 (빈 관리, 설정 등) -->
+		<!-- Spring Boot 핵심 기능 (빈 관리, 설정 등) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
 		</dependency>
 
-		<!-- ✅ Spring MVC + REST API 구현 -->
+		<!-- Spring MVC + REST API 구현 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
-		<!-- ✅ JPA 기반 ORM 및 DB 연동 기능 -->
+		<!-- JPA 기반 ORM 및 DB 연동 기능 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 
-		<!-- ✅ SQLite JDBC 드라이버 (로컬 개발용 데이터베이스) -->
+		<!-- SQLite JDBC 드라이버 (로컬 개발용 데이터베이스) -->
 		<dependency>
 			<groupId>org.xerial</groupId>
 			<artifactId>sqlite-jdbc</artifactId>
 			<version>3.42.0.0</version> <!-- 최신 안정 버전 -->
 		</dependency>
 
-		<!-- ✅ Swagger UI 및 OpenAPI 3.0 문서 자동 생성 -->
+		<!-- Swagger UI 및 OpenAPI 3.0 문서 자동 생성 -->
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>2.8.8</version> <!-- 2025년 기준 최신 호환 버전 -->
 		</dependency>
 
-		<!-- ✅ Spring Security (기본 보안 프레임워크) -->
+		<!-- Spring Security (기본 보안 프레임워크) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
-		<!-- ✅ 테스트 프레임워크 (JUnit, Mockito 등 포함) -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-config</artifactId>
+			<version>6.2.2</version>
+			<scope>compile</scope>
+		</dependency>
+
+
+		<!-- 테스트 프레임워크 (JUnit, Mockito 등 포함) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 
-		<!-- ✅ Lombok (Getter/Setter, 생성자 자동 생성용) -->
+		<!-- Lombok (Getter/Setter, 생성자 자동 생성용) -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
@@ -84,7 +92,7 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<!-- ✅ 개발 편의 기능: 코드 변경시 자동 재시작 -->
+		<!-- 개발 편의 기능: 코드 변경시 자동 재시작 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
@@ -92,7 +100,7 @@
 			<optional>true</optional>
 		</dependency>
 
-		<!-- ✅ JWT 인증 구현에 필요한 JJWT 라이브러리들 -->
+		<!--JWT 인증 구현에 필요한 JJWT 라이브러리들 -->
 
 		<!-- JJWT의 기본 API (Token 생성, 파싱 등 핵심 기능을 제공) -->
 		<dependency>

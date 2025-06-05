@@ -10,4 +10,13 @@ public class PortalApplication {
 	  SpringApplication.run(PortalApplication.class, args);
 	}
   }
-  
+
+
+
+  // ./mvnw clean install -U
+  // ./mvnw clean compile
+// mvnw.cmd spring-boot:run
+
+
+
+

@@ -2,6 +2,14 @@
     "java.project.sourcePaths": [
         "src/main/java"
     ],
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.saveActions.organizeImports": true,
+
+    "[java]": {
+      "editor.defaultFormatter": "redhat.java",
+      "editor.formatOnSave": true
+    },
+    "java.compile.nullAnalysis.mode": "automatic"
 }
+
   

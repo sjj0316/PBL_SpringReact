@@ -1,48 +1,50 @@
 package com.example.portal.config;
 
+import com.example.portal.security.JwtAuthenticationFilter;
+import com.example.portal.util.JwtUtil;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    /**
-     * Spring Security 설정을 개발용으로 완화하여
-     * - Swagger UI
-     * - API 테스트 (/api/**)
-     * 를 인증 없이 허용하도록 구성한 필터 체인입니다.
-     *
-     * 🚨 이 설정은 **개발 환경에서만** 사용하고,
-     *     운영 환경에서는 반드시 인증/인가를 적용해야 합니다.
-     */
+    private final JwtUtil jwtUtil;
+    private final UserDetailsService userDetailsService;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            // CSRF(크로스 사이트 요청 위조) 비활성화: 테스트 시 필요
-            .csrf(csrf -> csrf.disable())
+        return http
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/auth/**").permitAll()
+                        .anyRequest().authenticated())
+                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userDetailsService),
+                        UsernamePasswordAuthenticationFilter.class)
+                .build();
+    }
 
-            // HTTP 요청 인증 정책 설정
-            .authorizeHttpRequests(auth -> auth
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-                // ✅ Swagger 관련 경로는 인증 없이 허용
-                .requestMatchers(
-                    "/swagger-ui/**",
-                    "/v3/api-docs/**"
-                ).permitAll()
-
-                // ✅ API 호출도 인증 없이 허용 (개발용)
-                .requestMatchers("/api/**").permitAll()
-
-                // 🔒 그 외 요청은 인증 필요 (현재는 모두 허용)
-                .anyRequest().permitAll()
-            )
-
-            // 기본 로그인/로그아웃 페이지 비활성화 및 HTTP Basic 사용
-            .httpBasic(Customizer.withDefaults());
-
-        return http.build();
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 }

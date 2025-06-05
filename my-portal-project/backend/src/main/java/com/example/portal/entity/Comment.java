@@ -1,28 +1,35 @@
-package com.example.project.entity;
+package com.example.portal.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import java.time.LocalDateTime;
 
-@Entity
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Entity
 public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 1000)
     private String content;
 
-    private String author;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    private String createdAt;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id")
+    @ManyToOne
     private Post post;
+
+    @ManyToOne
+    private User user;
 }
+
+
+
+
+
+
+
+

@@ -1,6 +1,6 @@
 package com.example.portal.service;
 
-import com.example.portal.domain.Post;
+import com.example.portal.entity.Post;
 import com.example.portal.repository.PostRepository;
 import org.springframework.stereotype.Service;
 

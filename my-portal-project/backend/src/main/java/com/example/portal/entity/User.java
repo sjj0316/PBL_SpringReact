@@ -1,26 +1,29 @@
 package com.example.portal.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
+// Lombok
+import lombok.Getter;
+import lombok.Setter;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
-@Entity
-@Table(name = "users")  // Oracle 예약어 'user' 피하기 위해 복수형 사용
+// JPA
+import jakarta.persistence.*;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Entity
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(nullable = false)
     private String password;
 
-    private String role; // ex: ROLE_USER
+    private String role;
 }
