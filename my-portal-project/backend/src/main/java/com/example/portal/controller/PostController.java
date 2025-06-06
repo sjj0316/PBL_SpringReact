@@ -1,5 +1,6 @@
 package com.example.portal.controller;
 
+import java.util.Optional;
 import com.example.portal.dto.PostRequestDto;
 import com.example.portal.dto.PostResponseDto;
 import com.example.portal.entity.Post;

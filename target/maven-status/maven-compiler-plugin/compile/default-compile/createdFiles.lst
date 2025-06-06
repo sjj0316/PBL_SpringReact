@@ -1,0 +1,3 @@
+com\example\portal\PortalApplication.class
+com\example\portal\util\JwtUtil.class
+com\example\portal\config\SecurityConfig.class

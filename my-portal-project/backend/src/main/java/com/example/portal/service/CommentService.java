@@ -1,6 +1,7 @@
 // CommentService.java
 package com.example.portal.service;
 
+import java.util.Optional;
 import com.example.portal.dto.CommentRequestDto;
 import com.example.portal.entity.Comment;
 import com.example.portal.entity.Post;

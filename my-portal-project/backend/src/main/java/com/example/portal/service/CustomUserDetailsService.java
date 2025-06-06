@@ -1,12 +1,17 @@
-import org.springframework.stereotype.Service;
-import lombok.RequiredArgsConstructor;
+package com.example.portal.service;
 
+import com.example.portal.entity.User;
+import com.example.portal.repository.UserRepository;
+import com.example.portal.security.CustomUserDetails;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import com.example.portal.repository.UserRepository;
+import org.springframework.stereotype.Service;
 
-
+/**
+ * DB에서 사용자 정보를 조회하고 CustomUserDetails로 변환
+ */
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
@@ -16,15 +21,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
-                     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPassword(),
-                List.of(new SimpleGrantedAuthority(user.getRole()))
-        );
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + username));
+        return new CustomUserDetails(user);
     }
 }
-
-
-

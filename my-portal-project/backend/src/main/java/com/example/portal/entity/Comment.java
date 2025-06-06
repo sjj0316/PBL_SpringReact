@@ -4,11 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
+@Builder
 public class Comment {
 
     @Id
@@ -17,19 +18,12 @@ public class Comment {
 
     private String content;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @ManyToOne
+    private User user;
 
     @ManyToOne
     private Post post;
 
-    @ManyToOne
-    private User user;
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
 }
-
-
-
-
-
-
-
-

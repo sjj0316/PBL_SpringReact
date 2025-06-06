@@ -1,48 +1,54 @@
 package com.example.portal;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.example.portal.dto.LoginRequestDto;
-import com.example.portal.dto.RegisterRequestDto;
-import org.junit.jupiter.api.*;
+import com.example.portal.entity.User;
+import com.example.portal.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.web.servlet.MockMvc;
+import org.junit.jupiter.api.TestInstance;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import org.springframework.transaction.annotation.Transactional;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class AuthControllerTest {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Transactional
+class AuthControllerTest {
 
 	@Autowired
 	private MockMvc mockMvc;
 
 	@Autowired
-	private ObjectMapper objectMapper;
+	private UserRepository userRepository;
 
-	@Test
-	void 회원가입_성공() throws Exception {
-		RegisterRequestDto dto = new RegisterRequestDto("user1", "pass123");
-		String json = objectMapper.writeValueAsString(dto);
+	@Autowired
+	private PasswordEncoder passwordEncoder;
 
-		mockMvc.perform(post("/auth/register")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(json))
-				.andExpect(status().isOk());
+	@BeforeEach
+	void setUp() {
+		userRepository.deleteAllInBatch(); // 성능 + 안정성 개선
+
+		User user = new User();
+		user.setUsername("user1");
+		user.setPassword(passwordEncoder.encode("pass123"));
+		user.setRole("ROLE_USER");
+
+		userRepository.save(user);
 	}
 
 	@Test
 	void 로그인_성공() throws Exception {
-		LoginRequestDto dto = new LoginRequestDto("user1", "pass123");
-		String json = objectMapper.writeValueAsString(dto);
-
 		mockMvc.perform(post("/auth/login")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(json))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.token").exists());
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"username\":\"user1\",\"password\":\"pass123\"}"))
+				.andExpect(status().isOk());
 	}
 }

@@ -1,15 +1,6 @@
 spring:
-  datasource:
-    url: jdbc:sqlite:sample.db
-    driver-class-name: org.sqlite.JDBC
-
+  profiles:
+    active: sqlite  # 👈 이 줄을 명시해야 application-sqlite.yml 이 사용됨
   jpa:
     hibernate:
-      ddl-auto: update         # ✅ 테이블 자동 생성/수정
-    show-sql: true             # ✅ 콘솔에 SQL 출력
-    properties:
-      hibernate:
-        format_sql: true       # ✅ SQL 보기 좋게 정렬
-
-jwt:
-  secret: my-super-secure-secret-key-1234567890abcdef
+      ddl-auto: update

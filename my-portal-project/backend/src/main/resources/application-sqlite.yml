@@ -1,8 +1,16 @@
 spring:
   datasource:
-    url: jdbc:sqlite:dev.db
+    url: jdbc:sqlite:sample.db
     driver-class-name: org.sqlite.JDBC
+
   jpa:
-    database-platform: com.example.dialect.SQLiteDialect
     hibernate:
       ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: com.example.portal.config.CustomSQLiteDialect
+
+jwt:
+  secret: my-super-secure-secret-key-1234567890abcdef  # ✅ 반드시 필요!
