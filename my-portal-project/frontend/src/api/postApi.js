@@ -1,6 +1,6 @@
 // src/api/postApi.js
 
-const API_BASE = "http://localhost:8080/api/posts";
+const API_BASE = "http://localhost:8081/api/posts";
 
 function getAuthHeaders() {
     const token = localStorage.getItem("token");
@@ -10,21 +10,50 @@ function getAuthHeaders() {
     };
 }
 
-export async function fetchPosts() {
-    const res = await fetch(API_BASE);
-    return res.json();
+async function handleResponse(response) {
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || '요청 처리 중 오류가 발생했습니다.');
+    }
+    return response.json();
 }
 
-export async function fetchPost(id) {
-    const res = await fetch(`${API_BASE}/${id}`);
-    return res.json();
+export async function getPosts() {
+    const response = await fetch(API_BASE, {
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
 }
 
-export async function createPost({ title, content }) {
-    const res = await fetch(API_BASE, {
+export async function getPost(id) {
+    const response = await fetch(`${API_BASE}/${id}`, {
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+}
+
+export async function createPost({ title, content, category }) {
+    const response = await fetch(API_BASE, {
         method: "POST",
         headers: getAuthHeaders(),
-        body: JSON.stringify({ title, content }),
+        body: JSON.stringify({ title, content, category }),
     });
-    return res.text();
+    return handleResponse(response);
+}
+
+export async function updatePost(id, { title, content, category }) {
+    const response = await fetch(`${API_BASE}/${id}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ title, content, category }),
+    });
+    return handleResponse(response);
+}
+
+export async function deletePost(id) {
+    const response = await fetch(`${API_BASE}/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
 }

@@ -59,10 +59,7 @@ public class AuthController {
             // 사용자 인증을 수행합니다. 이때 username으로 DB에서 사용자를 조회하고,
             // 전달된 password가 DB의 암호화된 password와 일치하는지 검증합니다.
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            dto.getUsername(), // 사용자명
-                            dto.getPassword() // 평문 비밀번호 (BCrypt 등으로 매칭됨)
-                    ));
+                    new UsernamePasswordAuthenticationToken(dto.getUsername(), dto.getPassword()));
 
             // 🔐 인증 성공 후 JWT 토큰을 생성합니다.
             String token = jwtTokenProvider.createToken(authentication);

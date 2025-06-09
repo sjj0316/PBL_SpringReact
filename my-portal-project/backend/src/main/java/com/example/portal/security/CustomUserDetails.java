@@ -1,7 +1,7 @@
 package com.example.portal.security;
 
 import com.example.portal.entity.User;
-import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,10 +12,14 @@ import java.util.List;
 /**
  * Spring Security가 사용하는 사용자 정보 객체
  */
-@AllArgsConstructor
+@Getter
 public class CustomUserDetails implements UserDetails {
 
     private final User user;
+
+    public CustomUserDetails(User user) {
+        this.user = user;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -1,7 +1,10 @@
 package com.example.portal;
 
+import com.example.portal.dto.LoginRequestDto;
+import com.example.portal.dto.RegisterRequestDto;
 import com.example.portal.entity.User;
 import com.example.portal.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,19 +12,18 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.junit.jupiter.api.TestInstance;
-
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@Transactional
-class AuthControllerTest {
+@ActiveProfiles("test")
+public class AuthControllerTest {
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -32,23 +34,55 @@ class AuthControllerTest {
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 
+	@Autowired
+	private ObjectMapper objectMapper;
+
 	@BeforeEach
 	void setUp() {
-		userRepository.deleteAllInBatch(); // 성능 + 안정성 개선
+		System.out.println("=== 테스트 시작 ===");
+		userRepository.deleteAll();
 
-		User user = new User();
-		user.setUsername("user1");
-		user.setPassword(passwordEncoder.encode("pass123"));
-		user.setRole("ROLE_USER");
+		User testUser = new User();
+		testUser.setUsername("testuser");
+		testUser.setPassword(passwordEncoder.encode("password123"));
+		testUser.setRole("ROLE_USER");
 
-		userRepository.save(user);
+		User savedUser = userRepository.save(testUser);
+		userRepository.flush(); // DB에 즉시 반영
+
+		System.out.println("저장된 사용자: " + savedUser);
+		System.out.println("=== 테스트 설정 완료 ===");
 	}
 
 	@Test
 	void 로그인_성공() throws Exception {
+		LoginRequestDto loginRequest = new LoginRequestDto("testuser", "password123");
+
 		mockMvc.perform(post("/auth/login")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"username\":\"user1\",\"password\":\"pass123\"}"))
+				.content(objectMapper.writeValueAsString(loginRequest)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.token").exists());
+	}
+
+	@Test
+	void 회원가입_테스트() throws Exception {
+		RegisterRequestDto registerRequest = new RegisterRequestDto("newuser", "password123");
+
+		mockMvc.perform(post("/auth/register")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(registerRequest)))
 				.andExpect(status().isOk());
+	}
+
+	@Test
+	void 로그인_테스트() throws Exception {
+		LoginRequestDto loginRequest = new LoginRequestDto("testuser", "password123");
+
+		mockMvc.perform(post("/auth/login")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(loginRequest)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.token").exists());
 	}
 }

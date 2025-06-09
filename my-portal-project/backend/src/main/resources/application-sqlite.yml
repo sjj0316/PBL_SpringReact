@@ -2,15 +2,26 @@ spring:
   datasource:
     url: jdbc:sqlite:sample.db
     driver-class-name: org.sqlite.JDBC
-
   jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
     hibernate:
       ddl-auto: update
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-        dialect: com.example.portal.config.CustomSQLiteDialect
+
+server:
+  port: 8081
 
 jwt:
-  secret: my-super-secure-secret-key-1234567890abcdef  # ✅ 반드시 필요!
+  secret: "testSecretKey1234567890123456789012345678901234567890"
+  expiration: 86400000  # 24시간
+
+logging:
+  level:
+    root: INFO
+    org.springframework: DEBUG
+    org.hibernate: DEBUG
+    com.example.portal: DEBUG
+

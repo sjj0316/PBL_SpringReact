@@ -6,14 +6,9 @@ import lombok.Setter;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.ToString;
+import lombok.EqualsAndHashCode;
 
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import java.util.Collection;
-import java.util.List;
-
-// JPA
 import jakarta.persistence.*;
 
 @Entity
@@ -22,41 +17,55 @@ import jakarta.persistence.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString
+@EqualsAndHashCode
 @Table(name = "users")
-public class User implements UserDetails {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
     private String username;
 
+    @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    private String name;
+
+    @Column(name = "profile_image")
+    private String picture;
+
+    @Column(name = "provider")
+    private String provider;
+
+    @Column(name = "provider_id")
+    private String providerId;
+
+    @Column(name = "role")
     private String role;
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role));
+    @PrePersist
+    public void prePersist() {
+        if (this.role == null) {
+            this.role = "ROLE_USER";
+        }
     }
 
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
+    public User update(String name, String picture) {
+        this.username = name;
+        this.picture = picture;
+        return this;
     }
 
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
+    public enum AuthProvider {
+        LOCAL,
+        GOOGLE,
+        KAKAO,
+        NAVER
     }
 }

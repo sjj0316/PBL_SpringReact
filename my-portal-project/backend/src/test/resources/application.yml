@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MySQL
+    username: sa
+    password:
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        connection:
+          isolation_level: READ_COMMITTED
+  test:
+    database:
+      replace: none
+    transaction:
+      rollback: false
+
+jwt:
+  secret: your-test-secret-key-here-must-be-at-least-32-characters-long
+  expiration: 86400000 # 24시간 

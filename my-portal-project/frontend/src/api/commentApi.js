@@ -1,6 +1,6 @@
 // src/api/commentApi.js
 
-const API_BASE = "http://localhost:8080/api/comments";
+const API_BASE = "http://localhost:8081/api/comments";
 
 // JWT 토큰을 localStorage에서 꺼냄
 function getAuthHeaders() {
@@ -11,40 +11,47 @@ function getAuthHeaders() {
     };
 }
 
+async function handleResponse(response) {
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || '요청 처리 중 오류가 발생했습니다.');
+    }
+    return response.json();
+}
+
 // 댓글 조회
-export async function fetchComments(postId) {
-    const res = await fetch(`${API_BASE}?postId=${postId}`, {
-        method: "GET",
+export async function getComments(postId) {
+    const response = await fetch(`${API_BASE}?postId=${postId}`, {
         headers: getAuthHeaders(),
     });
-    return res.json();
+    return handleResponse(response);
 }
 
 // 댓글 작성
-export async function submitComment({ postId, content }) {
-    const res = await fetch(API_BASE, {
+export async function createComment(postId, content) {
+    const response = await fetch(API_BASE, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify({ postId, content }),
     });
-    return res.text(); // "댓글이 등록되었습니다."
+    return handleResponse(response);
 }
 
 // 댓글 수정
 export async function updateComment(id, content) {
-    const res = await fetch(`${API_BASE}/${id}`, {
+    const response = await fetch(`${API_BASE}/${id}`, {
         method: "PUT",
         headers: getAuthHeaders(),
         body: JSON.stringify({ content }),
     });
-    return res.text();
+    return handleResponse(response);
 }
 
 // 댓글 삭제
 export async function deleteComment(id) {
-    const res = await fetch(`${API_BASE}/${id}`, {
+    const response = await fetch(`${API_BASE}/${id}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
     });
-    return res.text();
+    return handleResponse(response);
 }

@@ -1,5 +1,27 @@
-import { fetchComments, submitComment, updateComment, deleteComment } from "../api/commentApi";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import {
+  Box,
+  TextField,
+  Button,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  IconButton,
+  Typography,
+  Divider,
+  Paper,
+  Alert,
+} from "@mui/material";
+import {
+  Send as SendIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+} from "@mui/icons-material";
+import { useAuth } from "../contexts/AuthContext";
+import { getComments, createComment, updateComment, deleteComment } from "../api/commentApi";
+import LoadingSpinner from "./common/LoadingSpinner";
+import ErrorMessage from "./common/ErrorMessage";
 
 // 로그인한 사용자명 가져오기 (예: localStorage 저장)
 function getUsername() {
@@ -7,96 +29,211 @@ function getUsername() {
 }
 
 export default function CommentSection({ postId }) {
-    const [comments, setComments] = useState([]);
-    const [newContent, setNewContent] = useState("");
-    const [editId, setEditId] = useState(null); // 현재 수정 중인 댓글 ID
-    const [editContent, setEditContent] = useState("");
+  const { user } = useAuth();
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [editingComment, setEditingComment] = useState(null);
+  const [editText, setEditText] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    const username = getUsername(); // 현재 로그인 사용자
+  const username = getUsername(); // 현재 로그인 사용자
 
-    useEffect(() => {
-        loadComments();
-    }, [postId]);
+  useEffect(() => {
+    fetchComments();
+  }, [postId]);
 
-    async function loadComments() {
-        try {
-            const data = await fetchComments(postId);
-            setComments(data);
-        } catch (err) {
-            console.error("댓글 불러오기 실패", err);
-        }
+  const fetchComments = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getComments(postId);
+      setComments(data);
+    } catch (err) {
+      setError(err.message || '댓글을 불러오는데 실패했습니다.');
+    } finally {
+      setLoading(false);
     }
+  };
 
-    async function handleSubmit(e) {
-        e.preventDefault();
-        if (!newContent.trim()) return;
-        try {
-            await submitComment({ postId, content: newContent });
-            setNewContent("");
-            await loadComments();
-        } catch (err) {
-            console.error("댓글 등록 실패", err);
-        }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+
+    try {
+      const comment = await createComment(postId, newComment);
+      setComments([...comments, comment]);
+      setNewComment('');
+    } catch (err) {
+      setError(err.message || '댓글 작성에 실패했습니다.');
     }
+  };
 
-    async function handleUpdate(id) {
-        try {
-            await updateComment(id, editContent);
-            setEditId(null);
-            await loadComments();
-        } catch (err) {
-            console.error("댓글 수정 실패", err);
-        }
+  const handleEdit = async (commentId) => {
+    if (!editText.trim()) return;
+
+    try {
+      const updatedComment = await updateComment(commentId, editText);
+      setComments(comments.map(comment =>
+        comment.id === commentId ? updatedComment : comment
+      ));
+      setEditingComment(null);
+      setEditText('');
+    } catch (err) {
+      setError(err.message || '댓글 수정에 실패했습니다.');
     }
+  };
 
-    async function handleDelete(id) {
-        if (!window.confirm("정말로 댓글을 삭제하시겠습니까?")) return;
-        try {
-            await deleteComment(id);
-            await loadComments();
-        } catch (err) {
-            console.error("댓글 삭제 실패", err);
-        }
+  const handleDelete = async (commentId) => {
+    if (!window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) return;
+
+    try {
+      await deleteComment(commentId);
+      setComments(comments.filter(comment => comment.id !== commentId));
+    } catch (err) {
+      setError(err.message || '댓글 삭제에 실패했습니다.');
     }
+  };
 
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (error) {
     return (
-        <div className="comment-section">
-            <form onSubmit={handleSubmit}>
-        <textarea
-            value={newContent}
-            onChange={(e) => setNewContent(e.target.value)}
-            placeholder="댓글을 입력하세요"
-        />
-                <button type="submit">댓글 작성</button>
-            </form>
-
-            <ul>
-                {comments.map((c) => (
-                    <li key={c.id}>
-                        <strong>{c.author}</strong> | <span>{c.createdAt}</span>
-                        {editId === c.id ? (
-                            <>
-                <textarea
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                />
-                                <button onClick={() => handleUpdate(c.id)}>저장</button>
-                                <button onClick={() => setEditId(null)}>취소</button>
-                            </>
-                        ) : (
-                            <>
-                                <p>{c.content}</p>
-                                {c.author === username && (
-                                    <div>
-                                        <button onClick={() => { setEditId(c.id); setEditContent(c.content); }}>✏ 수정</button>
-                                        <button onClick={() => handleDelete(c.id)}>🗑 삭제</button>
-                                    </div>
-                                )}
-                            </>
-                        )}
-                    </li>
-                ))}
-            </ul>
-        </div>
+      <ErrorMessage
+        title="댓글 로딩 실패"
+        message={error}
+        onRetry={fetchComments}
+      />
     );
+  }
+
+  return (
+    <Box>
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        댓글 {comments.length}개
+      </Typography>
+
+      {user && (
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+          sx={{
+            display: 'flex',
+            gap: 1,
+            mb: 3,
+          }}
+        >
+          <TextField
+            fullWidth
+            multiline
+            rows={2}
+            placeholder="댓글을 작성하세요"
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            variant="outlined"
+            size="small"
+          />
+          <Button
+            type="submit"
+            variant="contained"
+            endIcon={<SendIcon />}
+            disabled={!newComment.trim()}
+          >
+            작성
+          </Button>
+        </Box>
+      )}
+
+      <List>
+        {comments.map((comment) => (
+          <Box key={comment.id}>
+            <ListItem alignItems="flex-start">
+              <ListItemText
+                primary={
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="subtitle2">
+                      {comment.author}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {new Date(comment.createdAt).toLocaleDateString()}
+                    </Typography>
+                  </Box>
+                }
+                secondary={
+                  editingComment === comment.id ? (
+                    <Box sx={{ mt: 1 }}>
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={2}
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        variant="outlined"
+                        size="small"
+                        sx={{ mb: 1 }}
+                      />
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button
+                          size="small"
+                          onClick={() => handleEdit(comment.id)}
+                          disabled={!editText.trim()}
+                        >
+                          저장
+                        </Button>
+                        <Button
+                          size="small"
+                          onClick={() => {
+                            setEditingComment(null);
+                            setEditText('');
+                          }}
+                        >
+                          취소
+                        </Button>
+                      </Box>
+                    </Box>
+                  ) : (
+                    <Typography
+                      variant="body2"
+                      sx={{ mt: 1, whiteSpace: 'pre-wrap' }}
+                    >
+                      {comment.content}
+                    </Typography>
+                  )
+                }
+              />
+              {user && (user.username === comment.author || user.isAdmin) && (
+                <ListItemSecondaryAction>
+                  {editingComment !== comment.id && (
+                    <>
+                      <IconButton
+                        edge="end"
+                        size="small"
+                        onClick={() => {
+                          setEditingComment(comment.id);
+                          setEditText(comment.content);
+                        }}
+                        sx={{ mr: 1 }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        edge="end"
+                        size="small"
+                        onClick={() => handleDelete(comment.id)}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </>
+                  )}
+                </ListItemSecondaryAction>
+              )}
+            </ListItem>
+            <Divider variant="inset" component="li" />
+          </Box>
+        ))}
+      </List>
+    </Box>
+  );
 }

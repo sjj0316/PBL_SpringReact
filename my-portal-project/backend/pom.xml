@@ -28,6 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>17</java.version>
+		<hibernate.version>6.4.4.Final</hibernate.version>
 	</properties>
 	<dependencies>
 
@@ -53,14 +54,14 @@
 		<dependency>
 			<groupId>org.xerial</groupId>
 			<artifactId>sqlite-jdbc</artifactId>
-			<version>3.42.0.0</version> <!-- 최신 안정 버전 -->
+			<version>3.45.1.0</version>
 		</dependency>
 
-		<!-- Swagger UI 및 OpenAPI 3.0 문서 자동 생성 -->
+		<!-- Swagger(OpenAPI) -->
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-			<version>2.8.8</version> <!-- 2025년 기준 최신 호환 버전 -->
+			<version>2.2.0</version>
 		</dependency>
 
 		<!-- Spring Security (기본 보안 프레임워크) -->
@@ -123,6 +124,33 @@
 			<artifactId>jjwt-jackson</artifactId>
 			<version>0.11.5</version>
 			<scope>runtime</scope>
+		</dependency>
+
+		<!-- ConfigurationProperties 어노테이션 활성화 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-configuration-processor</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- Hibernate SQLite Dialect -->
+		<dependency>
+			<groupId>org.hibernate.orm</groupId>
+			<artifactId>hibernate-community-dialects</artifactId>
+			<version>${hibernate.version}</version>
+		</dependency>
+
+		<!-- H2 Database (테스트용) -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- OAuth2 Client -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-client</artifactId>
 		</dependency>
 
 	</dependencies>
