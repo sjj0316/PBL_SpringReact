@@ -16,6 +16,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+import com.example.portal.dto.comment.CommentRequest;
+import com.example.portal.dto.comment.CommentResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 /**
  * 댓글 관련 비즈니스 로직을 담당하는 서비스 클래스
  * - 댓글 생성, 수정, 삭제, 조회 기능 포함
@@ -30,64 +35,85 @@ public class CommentService {
     private final UserRepository userRepository;
 
     /**
-     * 댓글 작성 처리
-     * @param dto 댓글 요청 DTO (내용, 게시글 ID 포함)
-     * @param username 현재 로그인한 사용자명
+     * 새로운 댓글을 생성합니다.
+     *
+     * @param postId  게시글 ID
+     * @param request 댓글 생성 요청
+     * @param user    작성자
+     * @return 생성된 댓글 정보
      */
-    public void createComment(CommentRequestDto dto, String username) {
-        // 사용자 조회
-        User user = getUser(username);
-
+    public CommentResponse createComment(Long postId, CommentRequestDto request) {
         // 게시글 존재 여부 확인
-        Post post = postRepository.findById(dto.getPostId())
+        Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "게시글이 존재하지 않습니다."));
 
         // 댓글 생성 및 저장
         Comment comment = Comment.builder()
-                .content(dto.getContent())
-                .user(user)
+                .content(request.getContent())
                 .post(post)
                 .build();
 
         commentRepository.save(comment);
+        return CommentResponse.fromEntity(comment);
     }
 
     /**
-     * 댓글 수정 처리
-     * @param id 댓글 ID
-     * @param dto 수정할 댓글 내용
-     * @param username 현재 로그인한 사용자명
+     * 댓글을 수정합니다.
+     *
+     * @param commentId 댓글 ID
+     * @param request   댓글 수정 요청
+     * @param user      수정 요청자
+     * @return 수정된 댓글 정보
      */
-    public void updateComment(Long id, CommentRequestDto dto, String username) {
-        Comment comment = getAuthorizedComment(id, username); // 본인 댓글 확인
-        comment.setContent(dto.getContent());
+    public CommentResponse updateComment(Long commentId, CommentRequestDto request) {
+        Comment comment = getAuthorizedComment(commentId); // 본인 댓글 확인
+        comment.setContent(request.getContent());
         commentRepository.save(comment);
+        return CommentResponse.fromEntity(comment);
     }
 
     /**
-     * 댓글 삭제 처리
-     * @param id 댓글 ID
-     * @param username 현재 로그인한 사용자명
+     * 댓글을 삭제합니다.
+     *
+     * @param commentId 댓글 ID
+     * @param user      삭제 요청자
      */
-    public void deleteComment(Long id, String username) {
-        Comment comment = getAuthorizedComment(id, username); // 본인 댓글 확인
+    public void deleteComment(Long commentId) {
+        Comment comment = getAuthorizedComment(commentId); // 본인 댓글 확인
         commentRepository.delete(comment);
     }
 
     /**
-     * 특정 게시글(postId)에 달린 댓글 목록 조회
-     * @param postId 게시글 ID
-     * @return 댓글 목록 (작성 시간 오름차순)
+     * 게시글의 댓글 목록을 조회합니다.
+     *
+     * @param postId   게시글 ID
+     * @param pageable 페이지 정보
+     * @return 댓글 목록
      */
-    public List<Comment> getCommentsByPost(Long postId) {
+    public Page<CommentResponse> getCommentsByPost(Long postId, Pageable pageable) {
         if (!postRepository.existsById(postId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "게시글이 존재하지 않습니다.");
         }
-        return commentRepository.findByPostIdOrderByCreatedAtAsc(postId);
+        return commentRepository.findByPostIdOrderByCreatedAtAsc(postId, pageable)
+                .map(CommentResponse::fromEntity);
+    }
+
+    /**
+     * 게시글의 댓글 수를 조회합니다.
+     *
+     * @param postId 게시글 ID
+     * @return 댓글 수
+     */
+    public long getCommentCount(Long postId) {
+        if (!postRepository.existsById(postId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "게시글이 존재하지 않습니다.");
+        }
+        return commentRepository.countByPostId(postId);
     }
 
     /**
      * 사용자명으로 사용자 정보 조회
+     * 
      * @param username 사용자명
      * @return User 객체
      */
@@ -98,17 +124,13 @@ public class CommentService {
 
     /**
      * 본인이 작성한 댓글인지 확인하고 반환
+     * 
      * @param id 댓글 ID
-     * @param username 현재 사용자명
      * @return 본인의 댓글
      */
-    private Comment getAuthorizedComment(Long id, String username) {
+    private Comment getAuthorizedComment(Long id) {
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "댓글이 존재하지 않습니다."));
-
-        if (!comment.getUser().getUsername().equals(username)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "작성자만 수정/삭제할 수 있습니다.");
-        }
 
         return comment;
     }

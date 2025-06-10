@@ -2,22 +2,26 @@ package com.example.portal.security;
 
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 @Getter
 public class CustomOAuth2User implements OAuth2User {
-    private final Map<String, Object> attributes;
-    private final String email;
-    private final Collection<? extends GrantedAuthority> authorities;
 
-    public CustomOAuth2User(Map<String, Object> attributes, String email,
-            Collection<? extends GrantedAuthority> authorities) {
-        this.attributes = attributes;
+    private final String email;
+    private final String name;
+    private final String provider;
+    private final Map<String, Object> attributes;
+
+    public CustomOAuth2User(String email, String name, String provider, Map<String, Object> attributes) {
         this.email = email;
-        this.authorities = authorities;
+        this.name = name;
+        this.provider = provider;
+        this.attributes = attributes;
     }
 
     @Override
@@ -27,11 +31,11 @@ public class CustomOAuth2User implements OAuth2User {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
     @Override
     public String getName() {
-        return email;
+        return name;
     }
 }

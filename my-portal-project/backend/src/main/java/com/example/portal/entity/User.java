@@ -10,6 +10,11 @@ import lombok.ToString;
 import lombok.EqualsAndHashCode;
 
 import jakarta.persistence.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -20,22 +25,27 @@ import jakarta.persistence.*;
 @ToString
 @EqualsAndHashCode
 @Table(name = "users")
+@EntityListeners(AuditingEntityListener.class)
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String username;
+    @Column(unique = true, nullable = false)
+    private String email;
 
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false, unique = true)
-    private String email;
-
+    @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false)
+    private String role;
+
+    @Column(nullable = false, unique = true)
+    private String username;
 
     @Column(name = "profile_image")
     private String picture;
@@ -46,8 +56,16 @@ public class User {
     @Column(name = "provider_id")
     private String providerId;
 
-    @Column(name = "role")
-    private String role;
+    @Column(name = "profile_image_url")
+    private String profileImageUrl;
+
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
 
     @PrePersist
     public void prePersist() {
@@ -67,5 +85,13 @@ public class User {
         GOOGLE,
         KAKAO,
         NAVER
+    }
+
+    public void updateNickname(String nickname) {
+        this.name = nickname;
+    }
+
+    public String getNickname() {
+        return this.name;
     }
 }

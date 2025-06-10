@@ -27,6 +27,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { logout } from '../api/authApi';
 import DesktopNav from './DesktopNav';
+import { useAuthStore } from '../contexts/AuthStore';
 
 export default function Header() {
   const navigate = useNavigate();
@@ -42,10 +43,18 @@ export default function Header() {
     setAnchorElUser(null);
   };
 
-  const handleLogout = () => {
-    logout();
-    setUser(null);
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      handleCloseUserMenu();
+      navigate('/login');
+    } catch (error) {
+      console.error('로그아웃 중 오류 발생:', error);
+      // 오류가 발생하더라도 로컬 상태는 정리
+      useAuthStore.getState().logout();
+      handleCloseUserMenu();
+      navigate('/login');
+    }
   };
 
   return (

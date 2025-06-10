@@ -1,0 +1,8 @@
+{
+    "window.commandCenter": true,
+    "workbench.iconTheme": "material-icon-theme",
+    "[java]": {
+        "editor.suggest.snippetsPreventQuickSuggestions": false
+    },
+    "java.jdt.ls.java.home": "C:\\Program Files\\Java\\jdk-21"
+} 

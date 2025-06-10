@@ -1,11 +1,16 @@
 package com.example.portal.repository;
 
 import com.example.portal.entity.Comment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.List;
+import org.springframework.stereotype.Repository;
 
-// 시간 정렬
+@Repository
 public interface CommentRepository extends JpaRepository<Comment, Long> {
-    List<Comment> findByPostIdOrderByCreatedAtAsc(Long postId);
-}
+    Page<Comment> findByPostIdOrderByCreatedAtDesc(Long postId, Pageable pageable);
 
+    void deleteByPostId(Long postId);
+
+    long countByPostId(Long postId);
+}

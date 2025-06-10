@@ -12,9 +12,11 @@ import {
 } from '@mui/material';
 import { login } from '../api/authApi';
 import SocialLoginButtons from '../components/SocialLoginButtons';
+import useAuthStore from '../store/authStore';
 
 export default function Login() {
   const navigate = useNavigate();
+  const setUser = useAuthStore((state) => state.setUser);
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -34,10 +36,10 @@ export default function Login() {
 
     try {
       const response = await login(formData);
-      localStorage.setItem('token', response.token);
+      setUser(response.user);
       navigate('/');
     } catch (err) {
-      setError('로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.');
+      setError(err.message || '로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.');
     }
   };
 

@@ -1,122 +1,104 @@
 package com.example.portal.controller;
 
-import com.example.portal.dto.PostRequestDto;
-import com.example.portal.dto.PostResponseDto;
-import com.example.portal.entity.Post;
+import com.example.portal.dto.post.PostRequest;
+import com.example.portal.dto.post.PostResponse;
+import com.example.portal.dto.post.PostFileResponse;
 import com.example.portal.entity.User;
+import com.example.portal.security.UserPrincipal;
+import com.example.portal.security.SecurityUtil;
 import com.example.portal.service.PostService;
-import com.example.portal.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import jakarta.validation.Valid;
 
+import java.util.List;
+
+@Tag(name = "게시글", description = "게시글 관련 API")
 @RestController
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
 public class PostController {
+
     private final PostService postService;
-    private final UserService userService;
 
-    // 게시글 작성
-    @PostMapping
-    public ResponseEntity<PostResponseDto> createPost(
-            @RequestBody PostRequestDto dto,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        User user = userService.getUserByUsername(userDetails.getUsername());
-        Post post = Post.builder()
-                .title(dto.getTitle())
-                .content(dto.getContent())
-                .user(user)
-                .build();
-        Post savedPost = postService.createPost(post);
-        return ResponseEntity.ok(convertToDto(savedPost));
+    @Operation(summary = "게시글 작성", description = "새로운 게시글을 작성합니다.")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<PostResponse> createPost(
+            @Valid @RequestPart("request") PostRequest request,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
+        return ResponseEntity.ok(postService.createPost(request, files));
     }
 
-    // 게시글 목록 조회 (페이지네이션)
+    @Operation(summary = "게시글 수정", description = "기존 게시글을 수정합니다.")
+    @PutMapping("/{postId}")
+    public ResponseEntity<PostResponse> updatePost(
+            @PathVariable Long postId,
+            @Valid @RequestBody PostRequest request) {
+        return ResponseEntity.ok(postService.updatePost(postId, request));
+    }
+
+    @Operation(summary = "게시글 삭제", description = "게시글을 삭제합니다.")
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<Void> deletePost(@PathVariable Long postId) {
+        postService.deletePost(postId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "게시글 조회", description = "특정 게시글의 상세 정보를 조회합니다.")
+    @GetMapping("/{postId}")
+    public ResponseEntity<PostResponse> getPost(@PathVariable Long postId) {
+        return ResponseEntity.ok(postService.getPost(postId));
+    }
+
+    @Operation(summary = "게시글 목록 조회", description = "게시글 목록을 페이지네이션과 함께 조회합니다.")
     @GetMapping
-    public ResponseEntity<Page<PostResponseDto>> getPosts(Pageable pageable) {
-        Page<Post> posts = postService.getPosts(pageable);
-        Page<PostResponseDto> postDtos = posts.map(this::convertToDto);
-        return ResponseEntity.ok(postDtos);
+    public ResponseEntity<Page<PostResponse>> getPosts(Pageable pageable) {
+        return ResponseEntity.ok(postService.getPosts(pageable));
     }
 
-    // 카테고리별 게시글 목록 조회
-    @GetMapping("/category/{categoryId}")
-    public ResponseEntity<Page<PostResponseDto>> getPostsByCategory(
-            @PathVariable Long categoryId,
-            Pageable pageable) {
-        Page<Post> posts = postService.getPostsByCategory(categoryId, pageable);
-        Page<PostResponseDto> postDtos = posts.map(this::convertToDto);
-        return ResponseEntity.ok(postDtos);
+    @Operation(summary = "게시글 좋아요", description = "게시글에 좋아요를 추가합니다.")
+    @PostMapping("/{postId}/like")
+    public ResponseEntity<Void> addLike(@PathVariable Long postId) {
+        postService.addLike(postId);
+        return ResponseEntity.noContent().build();
     }
 
-    // 게시글 검색
+    @Operation(summary = "게시글 좋아요 취소", description = "게시글의 좋아요를 취소합니다.")
+    @DeleteMapping("/{postId}/like")
+    public ResponseEntity<Void> removeLike(@PathVariable Long postId) {
+        postService.removeLike(postId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "게시글 검색", description = "키워드로 게시글을 검색합니다.")
     @GetMapping("/search")
-    public ResponseEntity<Page<PostResponseDto>> searchPosts(
+    public ResponseEntity<Page<PostResponse>> searchPosts(
             @RequestParam String keyword,
-            @RequestParam(required = false) String searchType,
             Pageable pageable) {
-        Page<Post> posts = postService.searchPosts(keyword, searchType, pageable);
-        Page<PostResponseDto> postDtos = posts.map(this::convertToDto);
-        return ResponseEntity.ok(postDtos);
+        return ResponseEntity.ok(postService.searchPosts(keyword, pageable));
     }
 
-    // 게시글 상세 조회
-    @GetMapping("/{id}")
-    public ResponseEntity<PostResponseDto> getPost(@PathVariable Long id) {
-        Post post = postService.getPost(id);
-        return ResponseEntity.ok(convertToDto(post));
-    }
-
-    // 게시글 수정
-    @PutMapping("/{id}")
-    public ResponseEntity<PostResponseDto> updatePost(
-            @PathVariable Long id,
-            @RequestBody PostRequestDto dto,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        Post post = postService.updatePost(id, dto, userDetails.getUsername());
-        return ResponseEntity.ok(convertToDto(post));
-    }
-
-    // 게시글 삭제
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePost(
-            @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        postService.deletePost(id, userDetails.getUsername());
-        return ResponseEntity.ok().build();
-    }
-
-    // 조회수 증가
-    @PostMapping("/{id}/view")
-    public ResponseEntity<Void> incrementViewCount(@PathVariable Long id) {
-        postService.incrementViewCount(id);
-        return ResponseEntity.ok().build();
-    }
-
-    // 좋아요/싫어요
-    @PostMapping("/{id}/like")
-    public ResponseEntity<Void> toggleLike(
-            @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        postService.toggleLike(id, userDetails.getUsername());
-        return ResponseEntity.ok().build();
-    }
-
-    private PostResponseDto convertToDto(Post post) {
-        return PostResponseDto.builder()
-                .id(post.getId())
-                .title(post.getTitle())
-                .content(post.getContent())
-                .author(post.getUser().getUsername())
-                .viewCount(post.getViewCount())
-                .likeCount(post.getLikeCount())
-                .createdAt(post.getCreatedAt())
-                .updatedAt(post.getUpdatedAt())
-                .build();
+    @Operation(summary = "게시글 첨부파일 업로드", description = "게시글에 첨부할 파일을 업로드합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "업로드 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 요청")
+    })
+    @PostMapping("/upload")
+    public ResponseEntity<PostFileResponse> uploadFile(
+            @Parameter(description = "인증된 사용자 정보", hidden = true) @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @Parameter(description = "업로드할 파일", required = true) @RequestParam("file") MultipartFile file,
+            @Parameter(description = "게시글 ID", required = true) @RequestParam("postId") Long postId) {
+        return ResponseEntity.ok(postService.uploadPostFile(file, postId));
     }
 }

@@ -1,106 +1,85 @@
 package com.example.portal.service;
 
-import com.example.portal.dto.PostRequestDto;
-import com.example.portal.entity.Post;
-import com.example.portal.entity.User;
-import com.example.portal.repository.PostRepository;
-import com.example.portal.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
+import com.example.portal.dto.post.PostRequest;
+import com.example.portal.dto.post.PostResponse;
+import com.example.portal.dto.post.PostFileResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.persistence.EntityNotFoundException;
+import java.util.List;
 
-@Service
-@RequiredArgsConstructor
-@Transactional(readOnly = true)
-public class PostService {
-    private final PostRepository postRepository;
-    private final UserRepository userRepository;
+public interface PostService {
+    /**
+     * 새로운 게시글을 생성합니다.
+     *
+     * @param request 게시글 생성 요청
+     * @param files   첨부 파일 목록
+     * @return 생성된 게시글 정보
+     */
+    PostResponse createPost(PostRequest request, List<MultipartFile> files);
 
-    // 게시글 생성
-    @Transactional
-    public Post createPost(Post post) {
-        return postRepository.save(post);
-    }
+    /**
+     * 게시글을 수정합니다.
+     *
+     * @param postId  게시글 ID
+     * @param request 게시글 수정 요청
+     * @return 수정된 게시글 정보
+     */
+    PostResponse updatePost(Long postId, PostRequest request);
 
-    // 게시글 목록 조회
-    public Page<Post> getPosts(Pageable pageable) {
-        return postRepository.findAll(pageable);
-    }
+    /**
+     * 게시글을 삭제합니다.
+     *
+     * @param postId 게시글 ID
+     */
+    void deletePost(Long postId);
 
-    // 카테고리별 게시글 목록 조회
-    public Page<Post> getPostsByCategory(Long categoryId, Pageable pageable) {
-        return postRepository.findByCategoryId(categoryId, pageable);
-    }
+    /**
+     * 게시글을 조회합니다.
+     *
+     * @param postId 게시글 ID
+     * @return 게시글 정보
+     */
+    PostResponse getPost(Long postId);
 
-    // 게시글 검색
-    public Page<Post> searchPosts(String keyword, String searchType, Pageable pageable) {
-        if (searchType == null || searchType.equals("title")) {
-            return postRepository.findByTitleContaining(keyword, pageable);
-        } else if (searchType.equals("content")) {
-            return postRepository.findByContentContaining(keyword, pageable);
-        } else if (searchType.equals("author")) {
-            return postRepository.findByUserUsernameContaining(keyword, pageable);
-        } else {
-            return postRepository.findByTitleContainingOrContentContaining(keyword, keyword, pageable);
-        }
-    }
+    /**
+     * 게시글 목록을 조회합니다.
+     *
+     * @param pageable 페이지 정보
+     * @return 게시글 목록
+     */
+    Page<PostResponse> getPosts(Pageable pageable);
 
-    // 게시글 상세 조회
-    public Post getPost(Long id) {
-        return postRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("게시글이 존재하지 않습니다."));
-    }
+    /**
+     * 게시글에 좋아요를 추가합니다.
+     *
+     * @param postId 게시글 ID
+     */
+    void addLike(Long postId);
 
-    // 게시글 수정
-    @Transactional
-    public Post updatePost(Long id, PostRequestDto dto, String username) {
-        Post post = getPost(id);
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("사용자가 존재하지 않습니다."));
+    /**
+     * 게시글의 좋아요를 취소합니다.
+     *
+     * @param postId 게시글 ID
+     */
+    void removeLike(Long postId);
 
-        if (!post.getUser().equals(user)) {
-            throw new IllegalStateException("게시글을 수정할 권한이 없습니다.");
-        }
+    /**
+     * 게시글을 검색합니다.
+     *
+     * @param keyword  검색어
+     * @param pageable 페이지 정보
+     * @return 검색된 게시글 목록
+     */
+    Page<PostResponse> searchPosts(String keyword, Pageable pageable);
 
-        post.setTitle(dto.getTitle());
-        post.setContent(dto.getContent());
-        return post;
-    }
-
-    // 게시글 삭제
-    @Transactional
-    public void deletePost(Long id, String username) {
-        Post post = getPost(id);
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("사용자가 존재하지 않습니다."));
-
-        if (!post.getUser().equals(user)) {
-            throw new IllegalStateException("게시글을 삭제할 권한이 없습니다.");
-        }
-
-        postRepository.delete(post);
-    }
-
-    // 조회수 증가
-    @Transactional
-    public void incrementViewCount(Long id) {
-        Post post = getPost(id);
-        post.setViewCount(post.getViewCount() + 1);
-    }
-
-    // 좋아요/싫어요 토글
-    @Transactional
-    public void toggleLike(Long id, String username) {
-        Post post = getPost(id);
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("사용자가 존재하지 않습니다."));
-
-        // TODO: 좋아요/싫어요 로직 구현
-        // 현재는 단순히 좋아요 수만 증가/감소
-        post.setLikeCount(post.getLikeCount() + 1);
-    }
+    /**
+     * 게시글 첨부파일을 업로드합니다.
+     *
+     * @param file   업로드할 파일
+     * @param postId 첨부할 게시글 ID
+     * @return 업로드된 파일 정보
+     */
+    PostFileResponse uploadPostFile(MultipartFile file, Long postId);
 }
