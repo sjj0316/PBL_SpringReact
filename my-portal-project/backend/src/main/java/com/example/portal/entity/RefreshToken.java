@@ -1,18 +1,21 @@
 package com.example.portal.entity;
 
+import com.example.portal.entity.common.BaseTimeEntity;
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
-@Entity
 @Getter
+@Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Entity
 @Table(name = "refresh_tokens")
-public class RefreshToken {
-
+public class RefreshToken extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,21 +23,14 @@ public class RefreshToken {
     @Column(nullable = false, unique = true)
     private String token;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
     @Column(nullable = false)
-    private Instant expiryDate;
-
-    @Builder
-    public RefreshToken(String token, User user, Instant expiryDate) {
-        this.token = token;
-        this.user = user;
-        this.expiryDate = expiryDate;
-    }
+    private LocalDateTime expiryDate;
 
     public boolean isExpired() {
-        return Instant.now().isAfter(expiryDate);
+        return LocalDateTime.now().isAfter(expiryDate);
     }
 }

@@ -1,6 +1,5 @@
 package com.example.portal;
 
-import com.example.portal.dto.LoginRequestDto;
 import com.example.portal.dto.RegisterRequestDto;
 import com.example.portal.entity.User;
 import com.example.portal.repository.UserRepository;
@@ -20,9 +19,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.example.portal.dto.auth.LoginRequest;
+
 @SpringBootTest
-@AutoConfigureMockMvc
 @ActiveProfiles("test")
+@AutoConfigureMockMvc
 public class AuthControllerTest {
 
 	@Autowired
@@ -43,9 +44,9 @@ public class AuthControllerTest {
 		userRepository.deleteAll();
 
 		User testUser = new User();
-		testUser.setUsername("testuser");
+		testUser.setNickname("testuser");
 		testUser.setPassword(passwordEncoder.encode("password123"));
-		testUser.setRole("ROLE_USER");
+		testUser.setRole(User.Role.ROLE_USER);
 
 		User savedUser = userRepository.save(testUser);
 		userRepository.flush(); // DB에 즉시 반영
@@ -56,7 +57,7 @@ public class AuthControllerTest {
 
 	@Test
 	void 로그인_성공() throws Exception {
-		LoginRequestDto loginRequest = new LoginRequestDto("testuser", "password123");
+		LoginRequest loginRequest = new LoginRequest("testuser", "password123");
 
 		mockMvc.perform(post("/auth/login")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -77,7 +78,7 @@ public class AuthControllerTest {
 
 	@Test
 	void 로그인_테스트() throws Exception {
-		LoginRequestDto loginRequest = new LoginRequestDto("testuser", "password123");
+		LoginRequest loginRequest = new LoginRequest("testuser", "password123");
 
 		mockMvc.perform(post("/auth/login")
 				.contentType(MediaType.APPLICATION_JSON)

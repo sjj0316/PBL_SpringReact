@@ -9,21 +9,18 @@ import java.util.Map;
 @Getter
 @Builder
 public class OAuthAttributes {
-    private final Map<String, Object> attributes;
-    private final String nameAttributeKey;
-    private final String name;
-    private final String email;
-    private final String picture;
-    private final String provider;
+    private Map<String, Object> attributes;
+    private String nameAttributeKey;
+    private String name;
+    private String email;
+    private String picture;
 
     public static OAuthAttributes of(String registrationId, String userNameAttributeName,
             Map<String, Object> attributes) {
-        return switch (registrationId.toLowerCase()) {
-            case "google" -> ofGoogle(userNameAttributeName, attributes);
-            case "kakao" -> ofKakao(userNameAttributeName, attributes);
-            case "naver" -> ofNaver(userNameAttributeName, attributes);
-            default -> throw new IllegalArgumentException("지원하지 않는 OAuth2 제공자입니다: " + registrationId);
-        };
+        if ("naver".equals(registrationId)) {
+            return ofNaver("id", attributes);
+        }
+        return ofGoogle(userNameAttributeName, attributes);
     }
 
     private static OAuthAttributes ofGoogle(String userNameAttributeName, Map<String, Object> attributes) {
@@ -33,21 +30,6 @@ public class OAuthAttributes {
                 .picture((String) attributes.get("picture"))
                 .attributes(attributes)
                 .nameAttributeKey(userNameAttributeName)
-                .provider("google")
-                .build();
-    }
-
-    private static OAuthAttributes ofKakao(String userNameAttributeName, Map<String, Object> attributes) {
-        Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
-        Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
-
-        return OAuthAttributes.builder()
-                .name((String) profile.get("nickname"))
-                .email((String) kakaoAccount.get("email"))
-                .picture((String) profile.get("profile_image_url"))
-                .attributes(attributes)
-                .nameAttributeKey(userNameAttributeName)
-                .provider("kakao")
                 .build();
     }
 
@@ -58,18 +40,18 @@ public class OAuthAttributes {
                 .name((String) response.get("name"))
                 .email((String) response.get("email"))
                 .picture((String) response.get("profile_image"))
-                .attributes(attributes)
+                .attributes(response)
                 .nameAttributeKey(userNameAttributeName)
-                .provider("naver")
                 .build();
     }
 
     public User toEntity() {
         return User.builder()
                 .name(name)
+                .nickname(name)
                 .email(email)
-                .picture(picture)
-                .provider(provider)
+                .profileImageUrl(picture)
+                .role(User.Role.ROLE_USER)
                 .build();
     }
 }

@@ -79,6 +79,9 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public Page<CommentResponse> getCommentsByPost(Long postId, Pageable pageable) {
+        if (!postRepository.existsById(postId)) {
+            throw new ResourceNotFoundException("게시글을 찾을 수 없습니다.");
+        }
         return commentRepository.findByPostIdOrderByCreatedAtDesc(postId, pageable)
                 .map(CommentResponse::from);
     }

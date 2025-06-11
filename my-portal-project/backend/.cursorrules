@@ -1,0 +1,82 @@
+rules:
+  - name: "DTO Swagger 어노테이션 주입"
+    pattern: "src/main/java/com/example/portal/dto/**/*.java"
+    transform:
+      insert_if_missing: "@Schema"
+      also_ensure: ["@Operation", "@ApiResponse"]
+    action: "Annotate all DTO classes with Swagger-related annotations"
+
+  - name: "Service Impl 일관성 검사"
+    pattern: "src/main/java/com/example/portal/service/impl/**/*.java"
+    check:
+      must_implement_interface: true
+      unless: "is_abstract_class"
+    action: "Ensure service implementations match interface unless abstract"
+
+  - name: "Exception 클래스 정리"
+    pattern: "src/main/java/com/example/portal/exception/*Exception.java"
+    check:
+      must_extend: "BusinessException"
+    action: "Refactor to extend unified BusinessException"
+
+  - name: "JWT/보안 클래스 위치 검사"
+    pattern: "src/main/java/com/example/portal/service/auth/JwtTokenProvider.java"
+    action: "Move to security/jwt/JwtTokenProvider.java"
+
+  - name: "테스트 깨짐 방지"
+    pattern: "src/test/java/**/*.java"
+    check:
+      validate_imports: true
+    action: "Fix broken imports after package restructuring"
+
+  - name: "테스트 클래스 정합성 검사"
+    pattern: "src/test/java/**/*.java"
+    check:
+      validate_imports: true
+    action: "Ensure all moved DTO/Service are properly imported"
+
+  - name: "테스트 자동 실행 (변경 감지 시)"
+    on_save: true
+    if_pattern_changed: "src/test/java/**/*.java"
+    run: "./mvnw test"
+rules:
+  - name: "DTO Swagger 어노테이션 주입"
+    pattern: "src/main/java/com/example/portal/dto/**/*.java"
+    transform:
+      insert_if_missing: "@Schema"
+      also_ensure: ["@Operation", "@ApiResponse"]
+    action: "Annotate all DTO classes with Swagger-related annotations"
+
+  - name: "Service Impl 일관성 검사"
+    pattern: "src/main/java/com/example/portal/service/impl/**/*.java"
+    check:
+      must_implement_interface: true
+      unless: "is_abstract_class"
+    action: "Ensure service implementations match interface unless abstract"
+
+  - name: "Exception 클래스 정리"
+    pattern: "src/main/java/com/example/portal/exception/*Exception.java"
+    check:
+      must_extend: "BusinessException"
+    action: "Refactor to extend unified BusinessException"
+
+  - name: "JWT/보안 클래스 위치 검사"
+    pattern: "src/main/java/com/example/portal/service/auth/JwtTokenProvider.java"
+    action: "Move to security/jwt/JwtTokenProvider.java"
+
+  - name: "테스트 깨짐 방지"
+    pattern: "src/test/java/**/*.java"
+    check:
+      validate_imports: true
+    action: "Fix broken imports after package restructuring"
+
+  - name: "테스트 클래스 정합성 검사"
+    pattern: "src/test/java/**/*.java"
+    check:
+      validate_imports: true
+    action: "Ensure all moved DTO/Service are properly imported"
+
+  - name: "테스트 자동 실행 (변경 감지 시)"
+    on_save: true
+    if_pattern_changed: "src/test/java/**/*.java"
+    run: "./mvnw test"

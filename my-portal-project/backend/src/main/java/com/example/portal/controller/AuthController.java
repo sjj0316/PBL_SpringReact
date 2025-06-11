@@ -1,8 +1,8 @@
 package com.example.portal.controller;
 
-import com.example.portal.dto.LoginRequest;
-import com.example.portal.dto.SignupRequest;
-import com.example.portal.dto.TokenResponse;
+import com.example.portal.dto.auth.LoginRequest;
+import com.example.portal.dto.auth.SignupRequest;
+import com.example.portal.dto.auth.TokenResponse;
 import com.example.portal.entity.User;
 import com.example.portal.security.JwtTokenProvider;
 import com.example.portal.service.AuthService;
@@ -33,36 +33,40 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
     private final JwtTokenProvider jwtTokenProvider;
 
+    @PostMapping("/signup")
     @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "회원가입 성공"),
+            @ApiResponse(responseCode = "201", description = "회원가입 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청"),
-            @ApiResponse(responseCode = "409", description = "이미 존재하는 이메일")
+            @ApiResponse(responseCode = "409", description = "이미 존재하는 사용자"),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     })
-    @PostMapping("/signup")
     public ResponseEntity<TokenResponse> signup(
-            @Parameter(description = "회원가입 정보", required = true) @Valid @RequestBody SignupRequest request) {
+            @Parameter(description = "회원가입 요청", required = true) @Valid @RequestBody SignupRequest request) {
         return ResponseEntity.ok(authService.signup(request));
     }
 
-    @Operation(summary = "로그인", description = "이메일과 비밀번호로 로그인합니다.")
+    @PostMapping("/login")
+    @Operation(summary = "로그인", description = "사용자 로그인을 수행합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "로그인 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패")
+            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     })
-    @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(
-            @Parameter(description = "로그인 정보", required = true) @Valid @RequestBody LoginRequest request) {
+            @Parameter(description = "로그인 요청", required = true) @Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
 
+    @PostMapping("/refresh")
     @Operation(summary = "토큰 갱신", description = "리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급받습니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "토큰 갱신 성공"),
-            @ApiResponse(responseCode = "401", description = "유효하지 않은 리프레시 토큰")
+            @ApiResponse(responseCode = "401", description = "유효하지 않은 토큰"),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     })
-    @PostMapping("/refresh")
-    public ResponseEntity<TokenResponse> refresh(
+    public ResponseEntity<TokenResponse> refreshToken(
             @Parameter(description = "리프레시 토큰", required = true) @RequestHeader("Refresh-Token") String refreshToken) {
         return ResponseEntity.ok(authService.refreshToken(refreshToken));
     }

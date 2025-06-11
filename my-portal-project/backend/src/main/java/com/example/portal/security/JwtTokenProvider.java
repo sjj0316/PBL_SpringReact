@@ -3,6 +3,8 @@ package com.example.portal.security;
 import com.example.portal.entity.RefreshToken;
 import com.example.portal.entity.User;
 import com.example.portal.repository.RefreshTokenRepository;
+import com.example.portal.service.RefreshTokenService;
+import com.example.portal.security.user.UserPrincipal;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -11,13 +13,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 /**
  * JWT 토큰 생성 및 검증을 담당하는 클래스
@@ -180,6 +189,28 @@ public class JwtTokenProvider {
         return false;
     }
 
+    /**
+     * Authentication 객체로부터 JWT 토큰 생성
+     */
+    public String createToken(Authentication authentication) {
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        String authorities = userPrincipal.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(","));
+
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtAccessTokenValidityInMilliseconds);
+
+        return Jwts.builder()
+                .setSubject(userPrincipal.getEmail())
+                .claim("id", userPrincipal.getId())
+                .claim("authorities", authorities)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(key)
+                .compact();
+    }
+
     public String createRefreshToken(User user) {
         String token = Jwts.builder()
                 .setSubject(user.getEmail())
@@ -191,7 +222,8 @@ public class JwtTokenProvider {
         RefreshToken refreshToken = RefreshToken.builder()
                 .token(token)
                 .user(user)
-                .expiryDate(Instant.now().plusMillis(refreshValidityInMilliseconds))
+                .expiryDate(LocalDateTime.ofInstant(Instant.now().plusMillis(refreshValidityInMilliseconds),
+                        ZoneId.systemDefault()))
                 .build();
 
         refreshTokenRepository.save(refreshToken);
@@ -216,6 +248,23 @@ public class JwtTokenProvider {
 
     public long getRefreshTokenExpirationInMillis() {
         return refreshTokenExpirationInMillis;
+    }
+
+    /**
+     * 토큰에서 만료일 추출
+     */
+    public Date getExpirationTime(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return claims.getExpiration();
+        } catch (Exception e) {
+            log.error("Failed to get expiration from token", e);
+            throw new RuntimeException("Failed to get expiration from token", e);
+        }
     }
 
     // 추가: 토큰에서 사용자명 추출, 토큰 유효성 검사 등 필요한 경우 여기에 작성

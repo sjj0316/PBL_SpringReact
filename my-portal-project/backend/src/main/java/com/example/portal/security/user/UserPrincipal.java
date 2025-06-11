@@ -1,6 +1,7 @@
 package com.example.portal.security.user;
 
 import com.example.portal.entity.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -8,10 +9,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 @Getter
 public class UserPrincipal implements UserDetails {
-
     private final Long id;
     private final String email;
     private final String password;
@@ -37,7 +39,7 @@ public class UserPrincipal implements UserDetails {
     }
 
     public User getUser() {
-        return this.user;
+        return user;
     }
 
     @Override
@@ -73,5 +75,20 @@ public class UserPrincipal implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        UserPrincipal that = (UserPrincipal) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

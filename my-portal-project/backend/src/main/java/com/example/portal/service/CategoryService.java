@@ -1,8 +1,9 @@
 package com.example.portal.service;
 
-import com.example.portal.dto.CategoryRequestDto;
-import com.example.portal.dto.CategoryResponseDto;
+import com.example.portal.dto.category.CategoryRequestDto;
+import com.example.portal.dto.category.CategoryResponseDto;
 import com.example.portal.entity.Category;
+import com.example.portal.exception.ResourceNotFoundException;
 import com.example.portal.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,44 +21,51 @@ public class CategoryService {
 
     // 카테고리 생성
     @Transactional
-    public CategoryResponseDto createCategory(CategoryRequestDto requestDto) {
+    public CategoryResponseDto createCategory(CategoryRequestDto request) {
         Category category = Category.builder()
-                .name(requestDto.getName())
-                .description(requestDto.getDescription())
-                .displayOrder(requestDto.getDisplayOrder())
-                .isActive(requestDto.getIsActive())
+                .name(request.getName())
+                .description(request.getDescription())
                 .build();
 
         Category savedCategory = categoryRepository.save(category);
-        return convertToDto(savedCategory);
+        return CategoryResponseDto.builder()
+                .id(savedCategory.getId())
+                .name(savedCategory.getName())
+                .description(savedCategory.getDescription())
+                .createdAt(savedCategory.getCreatedAt())
+                .updatedAt(savedCategory.getUpdatedAt())
+                .build();
     }
 
     // 카테고리 수정
     @Transactional
-    public CategoryResponseDto updateCategory(Long id, CategoryRequestDto requestDto) {
+    public CategoryResponseDto updateCategory(Long id, CategoryRequestDto request) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("카테고리를 찾을 수 없습니다."));
 
-        category.setName(requestDto.getName());
-        category.setDescription(requestDto.getDescription());
-        category.setDisplayOrder(requestDto.getDisplayOrder());
-        category.setIsActive(requestDto.getIsActive());
-
-        return convertToDto(category);
+        category.update(request.getName(), request.getDescription(), request.getDisplayOrder(), request.isActive());
+        return CategoryResponseDto.from(category);
     }
 
     // 카테고리 삭제
     @Transactional
     public void deleteCategory(Long id) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다."));
-        categoryRepository.delete(category);
+        if (!categoryRepository.existsById(id)) {
+            throw new ResourceNotFoundException("카테고리를 찾을 수 없습니다.");
+        }
+        categoryRepository.deleteById(id);
     }
 
     // 카테고리 목록 조회
     public List<CategoryResponseDto> getAllCategories() {
         return categoryRepository.findAll().stream()
-                .map(this::convertToDto)
+                .map(category -> CategoryResponseDto.builder()
+                        .id(category.getId())
+                        .name(category.getName())
+                        .description(category.getDescription())
+                        .createdAt(category.getCreatedAt())
+                        .updatedAt(category.getUpdatedAt())
+                        .build())
                 .collect(Collectors.toList());
     }
 
@@ -71,17 +79,18 @@ public class CategoryService {
     // 카테고리 상세 조회
     public CategoryResponseDto getCategory(Long id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다."));
-        return convertToDto(category);
+                .orElseThrow(() -> new ResourceNotFoundException("카테고리를 찾을 수 없습니다."));
+
+        return CategoryResponseDto.builder()
+                .id(category.getId())
+                .name(category.getName())
+                .description(category.getDescription())
+                .createdAt(category.getCreatedAt())
+                .updatedAt(category.getUpdatedAt())
+                .build();
     }
 
     private CategoryResponseDto convertToDto(Category category) {
-        CategoryResponseDto dto = new CategoryResponseDto();
-        dto.setId(category.getId());
-        dto.setName(category.getName());
-        dto.setDescription(category.getDescription());
-        dto.setDisplayOrder(category.getDisplayOrder());
-        dto.setIsActive(category.getIsActive());
-        return dto;
+        return CategoryResponseDto.from(category);
     }
 }

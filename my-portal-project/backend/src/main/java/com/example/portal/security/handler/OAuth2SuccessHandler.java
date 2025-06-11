@@ -2,7 +2,8 @@ package com.example.portal.security.handler;
 
 import com.example.portal.entity.User;
 import com.example.portal.repository.UserRepository;
-import com.example.portal.security.jwt.JwtTokenProvider;
+import com.example.portal.security.JwtTokenProvider;
+import com.example.portal.service.AuthService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,6 +24,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AuthService authService;
 
     @Value("${app.oauth2.redirect-uri}")
     private String redirectUri;

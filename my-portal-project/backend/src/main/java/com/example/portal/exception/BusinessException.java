@@ -4,35 +4,24 @@ import lombok.Getter;
 
 @Getter
 public class BusinessException extends RuntimeException {
-    private final String errorCode;
+    private final ErrorCode errorCode;
+    private final String message;
 
-    public BusinessException(String message) {
-        super(message);
-        this.errorCode = "BUSINESS_ERROR";
+    public BusinessException(ErrorCode errorCode) {
+        super(errorCode.getMessage());
+        this.errorCode = errorCode;
+        this.message = errorCode.getMessage();
     }
 
-    public BusinessException(String message, String errorCode) {
+    public BusinessException(ErrorCode errorCode, String message) {
         super(message);
         this.errorCode = errorCode;
+        this.message = message;
     }
 
-    public BusinessException(String message, Throwable cause) {
-        super(message, cause);
-        this.errorCode = "BUSINESS_ERROR";
-    }
-
-    public BusinessException(String message, String errorCode, Throwable cause) {
+    public BusinessException(ErrorCode errorCode, String message, Throwable cause) {
         super(message, cause);
         this.errorCode = errorCode;
-    }
-
-    public BusinessException(String code, String message) {
-        super(message);
-        this.errorCode = code;
-    }
-
-    public BusinessException(String code, String message, Throwable cause) {
-        super(message, cause);
-        this.errorCode = code;
+        this.message = message;
     }
 }

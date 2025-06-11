@@ -9,6 +9,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +21,10 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.example.portal.security.oauth2.OAuth2LoginSuccessHandler;
+
 @SpringBootTest
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
 public class OAuth2LoginTest {
 
@@ -41,6 +46,7 @@ public class OAuth2LoginTest {
     }
 
     @Test
+    @WithMockUser
     void googleLoginSuccess() throws Exception {
         // Given
         OAuth2User oAuth2User = mock(OAuth2User.class);
@@ -57,6 +63,7 @@ public class OAuth2LoginTest {
     }
 
     @Test
+    @WithMockUser
     void naverLoginSuccess() throws Exception {
         // Given
         OAuth2User oAuth2User = mock(OAuth2User.class);
@@ -75,6 +82,7 @@ public class OAuth2LoginTest {
     }
 
     @Test
+    @WithMockUser
     void kakaoLoginSuccess() throws Exception {
         // Given
         OAuth2User oAuth2User = mock(OAuth2User.class);
@@ -97,6 +105,7 @@ public class OAuth2LoginTest {
     }
 
     @Test
+    @WithMockUser
     void loginFailure() throws Exception {
         // When & Then
         mockMvc.perform(get("/login/oauth2/code/google")

@@ -1,20 +1,17 @@
 package com.example.portal.entity;
 
+import com.example.portal.entity.common.BaseTimeEntity;
+import lombok.*;
+
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "categories")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Category {
+public class Category extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,22 +19,35 @@ public class Category {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @Column(length = 500)
+    @Column(nullable = false)
     private String description;
 
-    @Column(name = "display_order")
+    @Column(nullable = false)
     private Integer displayOrder;
 
-    @Column(name = "is_active")
-    private Boolean isActive;
+    @Column(nullable = false)
+    private boolean isActive;
 
     @PrePersist
     public void prePersist() {
-        if (this.isActive == null) {
-            this.isActive = true;
-        }
         if (this.displayOrder == null) {
             this.displayOrder = 0;
         }
+        this.isActive = true;
+    }
+
+    public void update(String name, String description, Integer displayOrder, boolean isActive) {
+        this.name = name;
+        this.description = description;
+        this.displayOrder = displayOrder;
+        this.isActive = isActive;
+    }
+
+    public void updateDisplayOrder(Integer displayOrder) {
+        this.displayOrder = displayOrder;
+    }
+
+    public void updateStatus(boolean isActive) {
+        this.isActive = isActive;
     }
 }

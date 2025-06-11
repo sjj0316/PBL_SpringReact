@@ -1,13 +1,14 @@
 package com.example.portal.config;
 
+import com.example.portal.security.CustomUserDetailsService;
 import com.example.portal.security.JwtAuthenticationFilter;
-import com.example.portal.security.OAuth2LoginSuccessHandler;
 import com.example.portal.security.OAuth2LoginFailureHandler;
-import com.example.portal.security.CustomOAuth2UserService;
+import com.example.portal.security.oauth2.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -40,9 +41,9 @@ import java.util.Arrays;
 public class SecurityConfig {
 
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
-        private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
         private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
         private final CustomOAuth2UserService customOAuth2UserService;
+        private final CustomUserDetailsService userDetailsService;
 
         /**
          * 보안 필터 체인 설정
@@ -67,11 +68,19 @@ public class SecurityConfig {
                                                                 .baseUri("/login/oauth2/code/*"))
                                                 .userInfoEndpoint(endpoint -> endpoint
                                                                 .userService(customOAuth2UserService))
-                                                .successHandler(oAuth2LoginSuccessHandler)
                                                 .failureHandler(oAuth2LoginFailureHandler))
+                                .authenticationProvider(authenticationProvider())
                                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
                 return http.build();
+        }
+
+        @Bean
+        public DaoAuthenticationProvider authenticationProvider() {
+                DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+                authProvider.setUserDetailsService(userDetailsService);
+                authProvider.setPasswordEncoder(passwordEncoder());
+                return authProvider;
         }
 
         /**

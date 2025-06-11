@@ -24,7 +24,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) throws IOException, ServletException {
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-        String token = tokenProvider.createToken(authentication);
+        String token = tokenProvider.createAccessToken(userPrincipal.getEmail());
 
         log.info("OAuth2 로그인 성공: {}", userPrincipal.getEmail());
         log.info("JWT 토큰 발급: {}", token);

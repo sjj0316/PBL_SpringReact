@@ -9,7 +9,8 @@
       "editor.defaultFormatter": "redhat.java",
       "editor.formatOnSave": true
     },
-    "java.compile.nullAnalysis.mode": "automatic"
+    "java.compile.nullAnalysis.mode": "automatic",
+    "files.autoSave": "onFocusChange"
 }
 
   

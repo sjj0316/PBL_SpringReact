@@ -1,59 +1,67 @@
 package com.example.portal.dto.post;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
 @Builder
-@Schema(description = "게시글 응답")
+@NoArgsConstructor
+@AllArgsConstructor
+@Schema(description = "게시글 응답 DTO")
 public class PostResponse {
 
-    @Schema(description = "게시글 ID", example = "1")
+    @Schema(description = "게시글 ID")
     private Long id;
 
-    @Schema(description = "게시글 제목", example = "게시글 제목입니다.")
+    @Schema(description = "게시글 제목")
     private String title;
 
-    @Schema(description = "게시글 내용", example = "게시글 내용입니다.")
+    @Schema(description = "게시글 내용")
     private String content;
 
-    @Schema(description = "작성자 ID", example = "1")
-    private Long authorId;
-
-    @Schema(description = "작성자 이름", example = "홍길동")
-    private String authorName;
-
-    @Schema(description = "좋아요 수", example = "10")
-    private int likeCount;
-
-    @Schema(description = "댓글 수", example = "5")
-    private int commentCount;
-
-    @Schema(description = "첨부 파일 목록")
-    private List<PostFileResponse> files;
-
-    @Schema(description = "생성일시")
+    @Schema(description = "작성 시간")
     private LocalDateTime createdAt;
 
-    @Schema(description = "수정일시")
+    @Schema(description = "수정 시간")
     private LocalDateTime updatedAt;
+
+    @Schema(description = "작성자")
+    private String author;
+
+    @Schema(description = "조회수")
+    private int viewCount;
+
+    @Schema(description = "좋아요 수")
+    private int likeCount;
+
+    @Schema(description = "카테고리")
+    private String category;
+
+    @Schema(description = "첨부파일 목록")
+    private List<String> fileUrls;
+
+    @Schema(description = "댓글 수")
+    private int commentCount;
 
     public static PostResponse from(com.example.portal.entity.Post post) {
         return PostResponse.builder()
                 .id(post.getId())
                 .title(post.getTitle())
                 .content(post.getContent())
-                .authorId(post.getUser().getId())
-                .authorName(post.getUser().getName())
-                .likeCount(post.getLikes() != null ? post.getLikes().size() : 0)
-                .commentCount(post.getComments() != null ? post.getComments().size() : 0)
-                .files(post.getFiles() != null ? post.getFiles().stream().map(PostFileResponse::from).toList() : null)
+                .author(post.getUser() != null ? post.getUser().getName() : "")
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
+                .viewCount(post.getViewCount())
+                .likeCount(post.getLikes() != null ? post.getLikes().size() : 0)
+                .category(post.getCategory() != null ? post.getCategory().getName() : "")
+                .fileUrls(post.getFiles() != null ? post.getFiles().stream().map(file -> file.getUrl()).toList() : null)
+                .commentCount(post.getComments() != null ? post.getComments().size() : 0)
                 .build();
     }
 }

@@ -53,7 +53,7 @@ public class FileStorageServiceImpl implements FileStorageService {
             return PostFile.builder()
                     .originalName(originalFileName)
                     .storedName(storedFileName)
-                    .fileUrl(getFileUrl(storedFileName))
+                    .url(getFileUrl(storedFileName))
                     .fileType(file.getContentType())
                     .fileSize(file.getSize())
                     .post(post)

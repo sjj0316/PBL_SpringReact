@@ -5,7 +5,7 @@ server:
 
 spring:
   profiles:
-    active: sqlite  # 👈 이 줄을 명시해야 application-sqlite.yml 이 사용됨
+    active: sqlite
   datasource:
     url: jdbc:h2:mem:testdb
     driver-class-name: org.h2.Driver
@@ -62,21 +62,9 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
-jwt:
-  secret: ${JWT_SECRET:your-secret-key}
-  access-token-validity-in-seconds: 3600
-  refresh-token-validity-in-seconds: 86400
-
-logging:
-  level:
-    org.springframework.security: DEBUG
-    com.example.portal: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-
 app:
   jwt:
-    secret: ${JWT_SECRET:your-secret-key}
+    secret: ${JWT_SECRET:your-secret-key-must-be-at-least-32-characters-long}
     access-token-validity-in-seconds: 3600
     refresh-token-validity-in-seconds: 604800
   oauth2:
@@ -85,7 +73,13 @@ app:
     upload-dir: ./uploads
     base-url: ${FILE_BASE_URL:http://localhost:8080/files}
 
-# Swagger 설정
+logging:
+  level:
+    org.springframework.security: DEBUG
+    com.example.portal: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
 springdoc:
   api-docs:
     path: /api-docs

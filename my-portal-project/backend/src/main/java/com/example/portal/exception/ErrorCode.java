@@ -5,34 +5,50 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public enum ErrorCode {
-    // 인증 관련 에러
-    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증되지 않은 요청입니다."),
-    FORBIDDEN(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
-    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
-    EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "만료된 토큰입니다."),
+    // Common
+    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "C001", "Invalid input value"),
+    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "C002", "Method not allowed"),
+    ENTITY_NOT_FOUND(HttpStatus.NOT_FOUND, "C003", "Entity not found"),
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "C004", "Internal server error"),
+    INVALID_TYPE_VALUE(HttpStatus.BAD_REQUEST, "C005", "Invalid type value"),
+    ACCESS_DENIED(HttpStatus.FORBIDDEN, "C006", "Access denied"),
 
-    // 리소스 관련 에러
-    RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 리소스를 찾을 수 없습니다."),
-    DUPLICATE_RESOURCE(HttpStatus.CONFLICT, "이미 존재하는 리소스입니다."),
+    // User
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "User not found"),
+    EMAIL_DUPLICATION(HttpStatus.CONFLICT, "U002", "Email is duplicated"),
+    NICKNAME_DUPLICATION(HttpStatus.CONFLICT, "U003", "Nickname is duplicated"),
+    INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "U004", "Invalid password"),
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "U005", "Unauthorized"),
 
-    // 파일 관련 에러
-    FILE_STORAGE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "파일 저장 중 오류가 발생했습니다."),
-    FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 파일을 찾을 수 없습니다."),
-    INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "지원하지 않는 파일 형식입니다."),
-    FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "파일 크기가 제한을 초과했습니다."),
+    // Post
+    POST_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "Post not found"),
+    POST_ACCESS_DENIED(HttpStatus.FORBIDDEN, "P002", "Post access denied"),
 
-    // 유효성 검사 에러
-    INVALID_INPUT(HttpStatus.BAD_REQUEST, "잘못된 입력값입니다."),
-    VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "입력값 검증에 실패했습니다."),
+    // Comment
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "CM001", "Comment not found"),
+    COMMENT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "CM002", "Comment access denied"),
 
-    // 서버 에러
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다.");
+    // Category
+    CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "CT001", "Category not found"),
+    CATEGORY_DUPLICATION(HttpStatus.CONFLICT, "CT002", "Category is duplicated"),
+
+    // File
+    FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "F001", "File not found"),
+    FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "F002", "File upload failed"),
+    FILE_STORAGE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "F003", "파일 저장 중 오류가 발생했습니다."),
+
+    // Token
+    TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "T001", "Token not found"),
+    TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "T002", "Token has expired"),
+    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "T003", "Invalid token");
 
     private final HttpStatus status;
+    private final String code;
     private final String message;
 
-    ErrorCode(HttpStatus status, String message) {
+    ErrorCode(HttpStatus status, String code, String message) {
         this.status = status;
+        this.code = code;
         this.message = message;
     }
 }

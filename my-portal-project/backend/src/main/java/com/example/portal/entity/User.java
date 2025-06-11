@@ -3,9 +3,9 @@ package com.example.portal.entity;
 // Lombok
 import lombok.Getter;
 import lombok.Setter;
-import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.ToString;
 import lombok.EqualsAndHashCode;
 
@@ -13,8 +13,13 @@ import jakarta.persistence.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 
 @Entity
 @Getter
@@ -26,13 +31,13 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode
 @Table(name = "users")
 @EntityListeners(AuditingEntityListener.class)
-public class User {
+public class User extends BaseTimeEntity implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
@@ -41,22 +46,23 @@ public class User {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
-    private String role;
-
     @Column(nullable = false, unique = true)
-    private String username;
+    private String nickname;
 
-    @Column(name = "profile_image")
-    private String picture;
+    @Column
+    private String bio;
 
-    @Column(name = "provider")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
+    @Column
     private String provider;
 
-    @Column(name = "provider_id")
+    @Column
     private String providerId;
 
-    @Column(name = "profile_image_url")
+    @Column
     private String profileImageUrl;
 
     @CreatedDate
@@ -70,28 +76,66 @@ public class User {
     @PrePersist
     public void prePersist() {
         if (this.role == null) {
-            this.role = "ROLE_USER";
+            this.role = Role.ROLE_USER;
         }
     }
 
-    public User update(String name, String picture) {
-        this.username = name;
-        this.picture = picture;
+    public User update(String name, String nickname, String bio) {
+        this.name = name;
+        this.nickname = nickname;
+        this.bio = bio;
         return this;
     }
 
-    public enum AuthProvider {
-        LOCAL,
-        GOOGLE,
-        KAKAO,
-        NAVER
+    public void updatePassword(String password) {
+        this.password = password;
+    }
+
+    public void updateProfileImage(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 
     public void updateNickname(String nickname) {
-        this.name = nickname;
+        this.nickname = nickname;
     }
 
-    public String getNickname() {
-        return this.name;
+    public enum Role {
+        ROLE_USER,
+        ROLE_ADMIN
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 }

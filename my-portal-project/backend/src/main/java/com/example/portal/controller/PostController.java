@@ -9,6 +9,8 @@ import com.example.portal.security.SecurityUtil;
 import com.example.portal.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,39 +34,67 @@ public class PostController {
 
     private final PostService postService;
 
+    @PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
     @Operation(summary = "게시글 작성", description = "새로운 게시글을 작성합니다.")
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "게시글 작성 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
+    })
     public ResponseEntity<PostResponse> createPost(
-            @Valid @RequestPart("request") PostRequest request,
-            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
+            @Parameter(description = "게시글 작성 정보", required = true) @Valid @RequestPart PostRequest request,
+            @Parameter(description = "첨부파일 목록") @RequestPart(required = false) List<MultipartFile> files) {
         return ResponseEntity.ok(postService.createPost(request, files));
     }
 
-    @Operation(summary = "게시글 수정", description = "기존 게시글을 수정합니다.")
-    @PutMapping("/{postId}")
-    public ResponseEntity<PostResponse> updatePost(
-            @PathVariable Long postId,
-            @Valid @RequestBody PostRequest request) {
-        return ResponseEntity.ok(postService.updatePost(postId, request));
-    }
-
-    @Operation(summary = "게시글 삭제", description = "게시글을 삭제합니다.")
-    @DeleteMapping("/{postId}")
-    public ResponseEntity<Void> deletePost(@PathVariable Long postId) {
-        postService.deletePost(postId);
-        return ResponseEntity.noContent().build();
-    }
-
+    @GetMapping("/{id}")
     @Operation(summary = "게시글 조회", description = "특정 게시글의 상세 정보를 조회합니다.")
-    @GetMapping("/{postId}")
-    public ResponseEntity<PostResponse> getPost(@PathVariable Long postId) {
-        return ResponseEntity.ok(postService.getPost(postId));
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "게시글 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+    })
+    public ResponseEntity<PostResponse> getPost(
+            @Parameter(description = "게시글 ID", required = true) @PathVariable Long id) {
+        return ResponseEntity.ok(postService.getPost(id));
     }
 
-    @Operation(summary = "게시글 목록 조회", description = "게시글 목록을 페이지네이션과 함께 조회합니다.")
     @GetMapping
-    public ResponseEntity<Page<PostResponse>> getPosts(Pageable pageable) {
+    @Operation(summary = "게시글 목록 조회", description = "게시글 목록을 페이지네이션하여 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "게시글 목록 조회 성공")
+    })
+    public ResponseEntity<Page<PostResponse>> getPosts(
+            @Parameter(description = "페이지네이션 정보") Pageable pageable) {
         return ResponseEntity.ok(postService.getPosts(pageable));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "게시글 수정", description = "기존 게시글을 수정합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "게시글 수정 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+            @ApiResponse(responseCode = "403", description = "권한 없음"),
+            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+    })
+    public ResponseEntity<PostResponse> updatePost(
+            @Parameter(description = "게시글 ID", required = true) @PathVariable Long id,
+            @Parameter(description = "게시글 수정 정보", required = true) @Valid @RequestBody PostRequest request) {
+        return ResponseEntity.ok(postService.updatePost(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "게시글 삭제", description = "게시글을 삭제합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "게시글 삭제 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+            @ApiResponse(responseCode = "403", description = "권한 없음"),
+            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+    })
+    public ResponseEntity<Void> deletePost(
+            @Parameter(description = "게시글 ID", required = true) @PathVariable Long id) {
+        postService.deletePost(id);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "게시글 좋아요", description = "게시글에 좋아요를 추가합니다.")

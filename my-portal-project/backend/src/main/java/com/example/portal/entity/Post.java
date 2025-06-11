@@ -1,6 +1,7 @@
 package com.example.portal.entity;
 
 import com.example.portal.dto.post.PostRequest;
+import com.example.portal.entity.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -17,6 +18,8 @@ import java.util.Set;
 @Table(name = "posts")
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @EntityListeners(AuditingEntityListener.class)
 public class Post extends BaseTimeEntity {
     @Id
@@ -26,8 +29,15 @@ public class Post extends BaseTimeEntity {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT")
     private String content;
+
+    @Column(nullable = false)
+    private String author;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -44,6 +54,9 @@ public class Post extends BaseTimeEntity {
 
     @Column(nullable = false)
     private int viewCount;
+
+    @Column(nullable = false)
+    private int likeCount;
 
     @Column(nullable = false)
     private boolean isDeleted;
@@ -117,6 +130,20 @@ public class Post extends BaseTimeEntity {
     }
 
     public void incrementViewCount() {
+        this.viewCount++;
+    }
+
+    public void addLike() {
+        this.likeCount++;
+    }
+
+    public void removeLike() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
+    }
+
+    public void increaseViewCount() {
         this.viewCount++;
     }
 }

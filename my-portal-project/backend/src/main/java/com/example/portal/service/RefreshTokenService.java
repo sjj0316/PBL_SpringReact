@@ -11,7 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.UUID;
 
 @Slf4j
@@ -31,7 +32,9 @@ public class RefreshTokenService {
         RefreshToken refreshToken = RefreshToken.builder()
                 .user(user)
                 .token(UUID.randomUUID().toString())
-                .expiryDate(Instant.now().plusMillis(jwtTokenProvider.getRefreshTokenExpirationInMillis()))
+                .expiryDate(LocalDateTime.ofInstant(
+                        java.time.Instant.now().plusMillis(jwtTokenProvider.getRefreshTokenExpirationInMillis()),
+                        ZoneId.systemDefault()))
                 .build();
 
         return refreshTokenRepository.save(refreshToken);
@@ -46,7 +49,7 @@ public class RefreshTokenService {
                 });
 
         // 토큰이 만료되었는지 확인
-        if (refreshToken.getExpiryDate().isBefore(Instant.now())) {
+        if (refreshToken.getExpiryDate().isBefore(LocalDateTime.now())) {
             refreshTokenRepository.delete(refreshToken);
             log.warn("Expired token used: {}", token);
             throw new TokenException.TokenExpiredException();
@@ -92,7 +95,9 @@ public class RefreshTokenService {
         RefreshToken refreshToken = RefreshToken.builder()
                 .user(user)
                 .token(token)
-                .expiryDate(Instant.now().plusMillis(1000 * 60 * 60 * 24 * 7)) // 7일
+                .expiryDate(LocalDateTime.ofInstant(
+                        java.time.Instant.now().plusMillis(1000 * 60 * 60 * 24 * 7),
+                        ZoneId.systemDefault())) // 7일
                 .build();
 
         refreshTokenRepository.save(refreshToken);
@@ -107,7 +112,7 @@ public class RefreshTokenService {
             throw new TokenException("토큰이 해당 사용자의 것이 아닙니다.");
         }
 
-        if (refreshToken.getExpiryDate().isBefore(Instant.now())) {
+        if (refreshToken.getExpiryDate().isBefore(LocalDateTime.now())) {
             refreshTokenRepository.delete(refreshToken);
             throw new TokenException("리프레시 토큰이 만료되었습니다.");
         }

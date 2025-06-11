@@ -66,10 +66,10 @@ public class OAuthAttributes {
 
     public User toEntity() {
         return User.builder()
-                .username(email)
+                .nickname(name)
                 .email(email)
                 .name(name)
-                .picture(picture)
+                .profileImageUrl(picture)
                 .provider(provider)
                 .providerId(nameAttributeKey)
                 .build();

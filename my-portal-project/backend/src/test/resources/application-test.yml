@@ -1,1 +1,61 @@
- 
+spring:
+  datasource:
+    url: "jdbc:sqlite::memory:"
+    driver-class-name: org.sqlite.JDBC
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        javax.persistence.schema-generation.scripts.action: create
+        javax.persistence.schema-generation.scripts.create-target: create.sql
+        javax.persistence.schema-generation.scripts.create-source: metadata
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-google-client-id
+            client-secret: test-google-client-secret
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            authorization-grant-type: authorization_code
+            client-name: Google
+            client-authentication-method: client_secret_post
+            scope:
+              - email
+              - profile
+          kakao:
+            client-id: test-kakao-client-id
+            client-secret: test-kakao-client-secret
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            authorization-grant-type: authorization_code
+            client-name: Kakao
+            client-authentication-method: client_secret_post
+            scope:
+              - profile_nickname
+              - account_email
+          naver:
+            client-id: test-naver-client-id
+            client-secret: test-naver-client-secret
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            authorization-grant-type: authorization_code
+            client-name: Naver
+            client-authentication-method: client_secret_post
+            scope:
+              - name
+              - email
+
+jwt:
+  secret: your-test-secret-key-here-must-be-at-least-32-characters-long
+  expiration: 86400000 # 24시간
+  refresh-token-expiration: 604800000 # 7일
+
+app:
+  jwt:
+    access-token-validity: 86400000 # 24시간
+    refresh-token-validity: 604800000 # 7일
+  oauth2:
+    redirect-uri: http://localhost:3000/oauth2/redirect 

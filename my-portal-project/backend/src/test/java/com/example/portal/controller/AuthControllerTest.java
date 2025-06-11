@@ -1,6 +1,6 @@
 package com.example.portal.controller;
 
-import com.example.portal.dto.auth.LoginRequestDto;
+import com.example.portal.dto.auth.LoginRequest;
 import com.example.portal.dto.auth.TokenResponse;
 import com.example.portal.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,12 +34,12 @@ class AuthControllerTest {
     @DisplayName("로그인 성공")
     void loginSuccess() throws Exception {
         // given
-        LoginRequestDto request = new LoginRequestDto();
+        LoginRequest request = new LoginRequest();
         request.setEmail("test@example.com");
         request.setPassword("password123");
 
         TokenResponse response = new TokenResponse("access-token", "refresh-token");
-        given(authService.login(any(LoginRequestDto.class))).willReturn(response);
+        given(authService.login(any(LoginRequest.class))).willReturn(response);
 
         // when & then
         mockMvc.perform(post("/api/auth/login")
