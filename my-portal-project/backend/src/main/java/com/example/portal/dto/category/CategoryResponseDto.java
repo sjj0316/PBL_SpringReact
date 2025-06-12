@@ -33,15 +33,15 @@ public class CategoryResponseDto {
     private Integer displayOrder;
 
     @Schema(description = "활성화 여부")
-    private boolean isActive;
+    private boolean active;
 
     public static CategoryResponseDto from(Category category) {
         return CategoryResponseDto.builder()
                 .id(category.getId())
                 .name(category.getName())
                 .description(category.getDescription())
-                .displayOrder(category.getDisplayOrder() != null ? category.getDisplayOrder() : 0)
-                .isActive(category.isActive())
+                .displayOrder(category.getDisplayOrder())
+                .active(category.isActive())
                 .build();
     }
 }

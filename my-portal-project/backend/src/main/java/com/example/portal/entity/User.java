@@ -22,14 +22,12 @@ import java.util.Collection;
 import java.util.List;
 
 @Entity
+@Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString
-@EqualsAndHashCode
-@Table(name = "users")
 @EntityListeners(AuditingEntityListener.class)
 public class User extends BaseTimeEntity implements UserDetails {
 
@@ -46,24 +44,21 @@ public class User extends BaseTimeEntity implements UserDetails {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false, unique = true)
+    @Column
     private String nickname;
+
+    @Column
+    private String picture;
 
     @Column
     private String bio;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
-
-    @Column
-    private String provider;
-
-    @Column
-    private String providerId;
-
     @Column
     private String profileImageUrl;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private UserRole role;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
@@ -76,7 +71,7 @@ public class User extends BaseTimeEntity implements UserDetails {
     @PrePersist
     public void prePersist() {
         if (this.role == null) {
-            this.role = Role.ROLE_USER;
+            this.role = UserRole.ROLE_USER;
         }
     }
 
@@ -97,11 +92,6 @@ public class User extends BaseTimeEntity implements UserDetails {
 
     public void updateNickname(String nickname) {
         this.nickname = nickname;
-    }
-
-    public enum Role {
-        ROLE_USER,
-        ROLE_ADMIN
     }
 
     @Override

@@ -119,6 +119,43 @@ public class PostController {
         return ResponseEntity.ok(postService.searchPosts(keyword, pageable));
     }
 
+    @Operation(summary = "카테고리별 게시글 검색", description = "특정 카테고리에서 키워드로 게시글을 검색합니다.")
+    @GetMapping("/search/category/{categoryId}")
+    public ResponseEntity<Page<PostResponse>> searchPostsByCategory(
+            @PathVariable Long categoryId,
+            @RequestParam String keyword,
+            Pageable pageable) {
+        return ResponseEntity.ok(postService.searchPostsByCategory(categoryId, keyword, pageable));
+    }
+
+    @Operation(summary = "작성자별 게시글 조회", description = "특정 작성자의 게시글을 조회합니다.")
+    @GetMapping("/user/{username}")
+    public ResponseEntity<Page<PostResponse>> getPostsByUsername(
+            @PathVariable String username,
+            Pageable pageable) {
+        return ResponseEntity.ok(postService.getPostsByUsername(username, pageable));
+    }
+
+    @Operation(summary = "최근 게시글 조회", description = "최근 작성된 게시글을 조회합니다.")
+    @GetMapping("/recent")
+    public ResponseEntity<Page<PostResponse>> getRecentPosts(Pageable pageable) {
+        return ResponseEntity.ok(postService.getRecentPosts(pageable));
+    }
+
+    @Operation(summary = "인기 게시글 조회", description = "조회수가 높은 게시글을 조회합니다.")
+    @GetMapping("/popular")
+    public ResponseEntity<Page<PostResponse>> getPopularPosts(Pageable pageable) {
+        return ResponseEntity.ok(postService.getPopularPosts(pageable));
+    }
+
+    @Operation(summary = "카테고리별 최근 게시글 조회", description = "특정 카테고리의 최근 게시글을 조회합니다.")
+    @GetMapping("/category/{categoryName}/recent")
+    public ResponseEntity<Page<PostResponse>> getRecentPostsByCategory(
+            @PathVariable String categoryName,
+            Pageable pageable) {
+        return ResponseEntity.ok(postService.getRecentPostsByCategory(categoryName, pageable));
+    }
+
     @Operation(summary = "게시글 첨부파일 업로드", description = "게시글에 첨부할 파일을 업로드합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "업로드 성공"),

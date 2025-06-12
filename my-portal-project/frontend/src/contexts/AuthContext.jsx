@@ -1,58 +1,73 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { isAuthenticated, getToken, getUser, setUser } from '../api/authApi';
+import { useNavigate } from 'react-router-dom';
+import { login, logout, signup, getToken, getUser, setUser, isAuthenticated } from '../api/authApi';
 
 const AuthContext = createContext(null);
 
-export function AuthProvider({ children }) {
+export const AuthProvider = ({ children }) => {
   const [user, setUserState] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const checkAuth = () => {
-      if (isAuthenticated()) {
+    const initAuth = () => {
+      const token = getToken();
+      if (token) {
         const userData = getUser();
-        if (userData) {
-          setUserState(userData);
-        } else {
-          // 토큰은 있지만 사용자 정보가 없는 경우
-          setUserState({ token: getToken() });
-        }
-      } else {
-        setUserState(null);
+        setUserState(userData);
       }
       setLoading(false);
     };
 
-    checkAuth();
-
-    // 토큰 만료 체크를 위한 인터벌 설정
-    const interval = setInterval(checkAuth, 60000); // 1분마다 체크
-
-    return () => clearInterval(interval);
+    initAuth();
   }, []);
 
-  const updateUser = (userData) => {
-    setUser(userData);
-    setUserState(userData);
+  const handleLogin = async (credentials) => {
+    try {
+      const response = await login(credentials);
+      setUserState(response.user);
+      navigate('/');
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const handleSignup = async (userData) => {
+    try {
+      const response = await signup(userData);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    setUserState(null);
+    navigate('/login');
   };
 
   const value = {
     user,
-    setUser: updateUser,
     loading,
+    isAuthenticated: isAuthenticated(),
+    login: handleLogin,
+    logout: handleLogout,
+    signup: handleSignup,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
-}
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
-export function useAuth() {
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-} 
+}; 

@@ -1,7 +1,6 @@
-// src/pages/PostWrite.jsx
 import { useState, useEffect } from "react";
-import { createPost } from "../api/postApi";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import { updatePost, getPost } from "../api/postApi";
 import {
   Box,
   Paper,
@@ -14,26 +13,51 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  CircularProgress,
 } from "@mui/material";
 import { ArrowBack as ArrowBackIcon } from "@mui/icons-material";
 import { useAuth } from "../contexts/AuthContext";
 import FileUpload from "../components/FileUpload";
 
-export default function PostWrite() {
+export default function PostEdit() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("");
   const [files, setFiles] = useState([]);
+  const [existingFiles, setExistingFiles] = useState([]);
   const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const navigate = useNavigate();
-  const { user } = useAuth();
 
   useEffect(() => {
     if (!user) {
-      navigate('/login', { state: { from: '/write' } });
+      navigate('/login', { state: { from: `/edit/${id}` } });
+      return;
     }
-  }, [user, navigate]);
+
+    const fetchPost = async () => {
+      try {
+        const post = await getPost(id);
+        if (post.author.username !== user.username) {
+          navigate('/');
+          return;
+        }
+        setTitle(post.title);
+        setContent(post.content);
+        setCategory(post.category);
+        setExistingFiles(post.files || []);
+        setLoading(false);
+      } catch (err) {
+        setError("게시글을 불러오는데 실패했습니다.");
+        setLoading(false);
+      }
+    };
+
+    fetchPost();
+  }, [id, user, navigate]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -50,16 +74,20 @@ export default function PostWrite() {
     }
 
     try {
-      await createPost({ title, content, category }, files);
+      await updatePost(id, { title, content, category }, files, existingFiles);
       setOpenSnackbar(true);
-      setTimeout(() => navigate("/"), 1500);
+      setTimeout(() => navigate(`/post/${id}`), 1500);
     } catch (err) {
-      setError("게시글 등록에 실패했습니다. 다시 시도해주세요.");
+      setError("게시글 수정에 실패했습니다. 다시 시도해주세요.");
     }
   }
 
-  if (!user) {
-    return null;
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return (
@@ -73,7 +101,7 @@ export default function PostWrite() {
           뒤로가기
         </Button>
         <Typography variant="h5" component="h1">
-          새 글 작성
+          게시글 수정
         </Typography>
       </Box>
 
@@ -125,7 +153,11 @@ export default function PostWrite() {
             <Typography variant="subtitle1" sx={{ mb: 1 }}>
               첨부파일
             </Typography>
-            <FileUpload onFilesChange={setFiles} />
+            <FileUpload 
+              onFilesChange={setFiles} 
+              existingFiles={existingFiles}
+              onExistingFilesChange={setExistingFiles}
+            />
           </Box>
 
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
@@ -140,7 +172,7 @@ export default function PostWrite() {
               variant="contained"
               color="primary"
             >
-              등록
+              수정
             </Button>
           </Box>
         </form>
@@ -149,8 +181,8 @@ export default function PostWrite() {
       <Snackbar
         open={openSnackbar}
         autoHideDuration={1500}
-        message="게시글이 등록되었습니다."
+        message="게시글이 수정되었습니다."
       />
     </Box>
   );
-}
+} 

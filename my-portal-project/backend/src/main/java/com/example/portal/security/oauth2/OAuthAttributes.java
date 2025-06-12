@@ -1,6 +1,7 @@
 package com.example.portal.security.oauth2;
 
 import com.example.portal.entity.User;
+import com.example.portal.entity.UserRole;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -48,10 +49,9 @@ public class OAuthAttributes {
     public User toEntity() {
         return User.builder()
                 .name(name)
-                .nickname(name)
                 .email(email)
-                .profileImageUrl(picture)
-                .role(User.Role.ROLE_USER)
+                .picture(picture)
+                .role(UserRole.ROLE_USER)
                 .build();
     }
 }

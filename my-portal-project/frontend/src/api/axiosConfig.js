@@ -1,5 +1,5 @@
 import axios from 'axios';
-import useAuthStore from '../store/authStore';
+import { getToken, refreshToken } from './authApi';
 
 const API_URL = 'http://localhost:8081';
 
@@ -13,9 +13,9 @@ const axiosInstance = axios.create({
 // 요청 인터셉터
 axiosInstance.interceptors.request.use(
   (config) => {
-    const { accessToken } = useAuthStore.getState();
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
+    const token = getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -30,20 +30,20 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // 401 에러이고 재시도하지 않은 요청인 경우
+    // 토큰 만료로 인한 401 에러이고, 재시도하지 않은 요청인 경우
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
-        // 토큰 갱신 시도
-        const newAccessToken = await useAuthStore.getState().refreshAccessToken();
+        // 토큰 갱신
+        const newToken = await refreshToken();
         
-        // 원래 요청 재시도
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        // 새로운 토큰으로 원래 요청 재시도
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return axiosInstance(originalRequest);
       } catch (refreshError) {
-        // 토큰 갱신 실패 시 로그아웃
-        useAuthStore.getState().logout();
+        // 토큰 갱신 실패 시 로그아웃 처리
+        window.location.href = '/login';
         return Promise.reject(refreshError);
       }
     }

@@ -5,9 +5,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.FORBIDDEN)
 public class TokenRefreshException extends RuntimeException {
-    private static final long serialVersionUID = 1L;
-
-    public TokenRefreshException(String token, String message) {
-        super(String.format("토큰 [%s] 에 대한 오류: %s", token, message));
+    public TokenRefreshException(String message) {
+        super(message);
     }
 }

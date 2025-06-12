@@ -1,6 +1,6 @@
 // src/api/commentApi.js
 
-const API_BASE = "http://localhost:8081/api/comments";
+import axiosInstance from './axiosConfig';
 
 // JWT 토큰을 localStorage에서 꺼냄
 function getAuthHeaders() {
@@ -19,39 +19,26 @@ async function handleResponse(response) {
     return response.json();
 }
 
-// 댓글 조회
-export async function getComments(postId) {
-    const response = await fetch(`${API_BASE}?postId=${postId}`, {
-        headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-}
+// 댓글 목록 조회
+export const getComments = async (postId) => {
+    const response = await axiosInstance.get(`/api/posts/${postId}/comments`);
+    return response.data;
+};
 
 // 댓글 작성
-export async function createComment(postId, content) {
-    const response = await fetch(API_BASE, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ postId, content }),
-    });
-    return handleResponse(response);
-}
+export const createComment = async (postId, commentData) => {
+    const response = await axiosInstance.post(`/api/posts/${postId}/comments`, commentData);
+    return response.data;
+};
 
 // 댓글 수정
-export async function updateComment(id, content) {
-    const response = await fetch(`${API_BASE}/${id}`, {
-        method: "PUT",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ content }),
-    });
-    return handleResponse(response);
-}
+export const updateComment = async (commentId, commentData) => {
+    const response = await axiosInstance.put(`/api/comments/${commentId}`, commentData);
+    return response.data;
+};
 
 // 댓글 삭제
-export async function deleteComment(id) {
-    const response = await fetch(`${API_BASE}/${id}`, {
-        method: "DELETE",
-        headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-}
+export const deleteComment = async (commentId) => {
+    const response = await axiosInstance.delete(`/api/comments/${commentId}`);
+    return response.data;
+};

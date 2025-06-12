@@ -1,55 +1,50 @@
 import axiosInstance from './axiosConfig';
-import useAuthStore from '../store/authStore';
 
-export async function login(credentials) {
-  try {
-    const response = await axiosInstance.post('/api/auth/login', credentials);
-    const { accessToken, refreshToken, user } = response.data;
-    
-    useAuthStore.getState().setTokens(accessToken, refreshToken);
-    useAuthStore.getState().setUser(user);
-    
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || '로그인에 실패했습니다.');
-  }
-}
+const TOKEN_KEY = 'auth_token';
+const USER_KEY = 'user_info';
 
-export async function register(userData) {
-  try {
-    const response = await axiosInstance.post('/api/auth/register', userData);
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || '회원가입에 실패했습니다.');
-  }
-}
+export const login = async (credentials) => {
+  const response = await axiosInstance.post('/api/auth/login', credentials);
+  const { accessToken, refreshToken, user } = response.data;
+  setToken(accessToken);
+  setUser(user);
+  return response.data;
+};
 
-export async function logout() {
-  try {
-    await axiosInstance.post('/api/auth/logout');
-  } catch (error) {
-    console.error('로그아웃 중 오류 발생:', error);
-  } finally {
-    useAuthStore.getState().logout();
-  }
-}
+export const signup = async (userData) => {
+  const response = await axiosInstance.post('/api/auth/signup', userData);
+  return response.data;
+};
 
-export async function refreshToken() {
-  try {
-    const response = await axiosInstance.post('/api/auth/refresh');
-    const { accessToken, refreshToken } = response.data;
-    useAuthStore.getState().setTokens(accessToken, refreshToken);
-    return response.data;
-  } catch (error) {
-    useAuthStore.getState().logout();
-    throw new Error('토큰 갱신에 실패했습니다.');
-  }
-}
+export const logout = () => {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+};
 
-export function isAuthenticated() {
-  return useAuthStore.getState().isAuthenticated;
-}
+export const getToken = () => {
+  return localStorage.getItem(TOKEN_KEY);
+};
 
-export function getUser() {
-  return useAuthStore.getState().user;
-} 
+export const setToken = (token) => {
+  localStorage.setItem(TOKEN_KEY, token);
+};
+
+export const getUser = () => {
+  const userStr = localStorage.getItem(USER_KEY);
+  return userStr ? JSON.parse(userStr) : null;
+};
+
+export const setUser = (user) => {
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+};
+
+export const isAuthenticated = () => {
+  return !!getToken();
+};
+
+export const refreshToken = async () => {
+  const response = await axiosInstance.post('/api/auth/refresh');
+  const { accessToken } = response.data;
+  setToken(accessToken);
+  return accessToken;
+}; 

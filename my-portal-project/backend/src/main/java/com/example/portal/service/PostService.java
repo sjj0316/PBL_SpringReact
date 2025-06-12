@@ -26,5 +26,15 @@ public interface PostService {
 
     Page<PostResponse> searchPosts(String keyword, Pageable pageable);
 
+    Page<PostResponse> searchPostsByCategory(Long categoryId, String keyword, Pageable pageable);
+
+    Page<PostResponse> getPostsByUsername(String username, Pageable pageable);
+
+    Page<PostResponse> getRecentPosts(Pageable pageable);
+
+    Page<PostResponse> getPopularPosts(Pageable pageable);
+
+    Page<PostResponse> getRecentPostsByCategory(String categoryName, Pageable pageable);
+
     PostFileResponse uploadPostFile(MultipartFile file, Long postId);
 }

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
 
 @Getter
 @Builder
@@ -50,6 +51,15 @@ public class PostResponse {
     private int commentCount;
 
     public static PostResponse from(com.example.portal.entity.Post post) {
+        List<String> urls = new ArrayList<>();
+        if (post.getFiles() != null) {
+            for (com.example.portal.entity.PostFile file : post.getFiles()) {
+                if (file.getUrl() != null) {
+                    urls.add(file.getUrl());
+                }
+            }
+        }
+
         return PostResponse.builder()
                 .id(post.getId())
                 .title(post.getTitle())
@@ -60,7 +70,7 @@ public class PostResponse {
                 .viewCount(post.getViewCount())
                 .likeCount(post.getLikes() != null ? post.getLikes().size() : 0)
                 .category(post.getCategory() != null ? post.getCategory().getName() : "")
-                .fileUrls(post.getFiles() != null ? post.getFiles().stream().map(file -> file.getUrl()).toList() : null)
+                .fileUrls(urls)
                 .commentCount(post.getComments() != null ? post.getComments().size() : 0)
                 .build();
     }

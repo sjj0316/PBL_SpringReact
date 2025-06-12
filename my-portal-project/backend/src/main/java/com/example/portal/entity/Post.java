@@ -17,6 +17,7 @@ import java.util.Set;
 @Entity
 @Table(name = "posts")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -29,7 +30,7 @@ public class Post extends BaseTimeEntity {
     @Column(nullable = false)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @Column(nullable = false)
@@ -117,16 +118,14 @@ public class Post extends BaseTimeEntity {
         this.files.clear();
     }
 
-    public void addLike(User user) {
-        PostLike like = PostLike.builder()
-                .post(this)
-                .user(user)
-                .build();
-        this.likes.add(like);
+    public void addLike(PostLike like) {
+        likes.add(like);
+        like.setPost(this);
     }
 
-    public void removeLike(User user) {
-        this.likes.removeIf(like -> like.getUser().equals(user));
+    public void removeLike(PostLike like) {
+        likes.remove(like);
+        like.setPost(null);
     }
 
     public void incrementViewCount() {

@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,8 +49,8 @@ public class AuthService {
         userRepository.save(user);
         log.info("새로운 사용자 가입: {}", user.getEmail());
 
-        String accessToken = jwtTokenProvider.createAccessToken(user.getEmail());
-        String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
+        String accessToken = jwtTokenProvider.createAccessToken(user);
+        String refreshToken = jwtTokenProvider.createRefreshToken(user);
 
         return TokenResponse.builder()
                 .accessToken(accessToken)
@@ -60,54 +61,45 @@ public class AuthService {
     }
 
     @Transactional
-    public TokenResponse login(LoginRequest request) {
+    public TokenResponse login(LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getEmail(),
+                        loginRequest.getPassword()));
 
-        String accessToken = jwtTokenProvider.createToken(authentication);
-        String refreshToken = createRefreshToken(authentication);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        User user = (User) authentication.getPrincipal();
 
-        return new TokenResponse(accessToken, refreshToken);
-    }
+        String accessToken = jwtTokenProvider.createAccessToken(user);
+        String refreshToken = jwtTokenProvider.createRefreshToken(user);
 
-    private String createRefreshToken(Authentication authentication) {
-        User user = userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-
-        RefreshToken refreshToken = RefreshToken.builder()
-                .user(user)
-                .token(jwtTokenProvider.createToken(authentication))
-                .expiryDate(LocalDateTime.now().plusDays(7))
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .expiresIn(jwtTokenProvider.getExpirationTime(accessToken).getTime())
                 .build();
-
-        refreshTokenRepository.save(refreshToken);
-        return refreshToken.getToken();
     }
 
     @Transactional
     public TokenResponse refreshToken(String refreshToken) {
-        if (!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new InvalidTokenException("유효하지 않은 토큰입니다.");
+        if (!jwtTokenProvider.validateToken(refreshToken) || !jwtTokenProvider.isRefreshToken(refreshToken)) {
+            throw new RuntimeException("Invalid refresh token");
         }
 
-        RefreshToken token = refreshTokenRepository.findByToken(refreshToken)
-                .orElseThrow(() -> new InvalidTokenException("토큰을 찾을 수 없습니다."));
+        String email = jwtTokenProvider.getEmailFromToken(refreshToken);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (token.isExpired()) {
-            refreshTokenRepository.delete(token);
-            throw new InvalidTokenException("만료된 토큰입니다.");
-        }
+        String newAccessToken = jwtTokenProvider.createAccessToken(user);
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(user);
 
-        User user = token.getUser();
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-                user.getEmail(), null, user.getAuthorities());
-
-        String newAccessToken = jwtTokenProvider.createToken(authentication);
-        String newRefreshToken = createRefreshToken(authentication);
-
-        refreshTokenRepository.delete(token);
-
-        return new TokenResponse(newAccessToken, newRefreshToken);
+        return TokenResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .tokenType("Bearer")
+                .expiresIn(jwtTokenProvider.getExpirationTime(newAccessToken).getTime())
+                .build();
     }
 
     @Transactional
