@@ -1,63 +1,97 @@
 import { useState } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Container,
   Box,
   Typography,
   TextField,
   Button,
-  Paper,
   Link,
-  Alert,
+  Paper,
 } from '@mui/material';
-import { login } from '../api/authApi';
-import SocialLoginButtons from '../components/SocialLoginButtons';
-import useAuthStore from '../store/authStore';
+import { login } from '../store/slices/authSlice';
+import { showToast } from '../store/slices/uiSlice';
 
-export default function Login() {
+const Login = () => {
   const navigate = useNavigate();
-  const setUser = useAuthStore((state) => state.setUser);
+  const dispatch = useDispatch();
+  const { loading } = useSelector((state) => state.auth);
   const [formData, setFormData] = useState({
     username: '',
     password: '',
   });
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.username) {
+      newErrors.username = '아이디를 입력해주세요.';
+    }
+    if (!formData.password) {
+      newErrors.password = '비밀번호를 입력해주세요.';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    if (!validateForm()) return;
 
     try {
-      const response = await login(formData);
-      setUser(response.user);
+      await dispatch(login(formData)).unwrap();
+      dispatch(showToast({ message: '로그인되었습니다.', severity: 'success' }));
       navigate('/');
-    } catch (err) {
-      setError(err.message || '로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.');
+    } catch (error) {
+      dispatch(
+        showToast({
+          message: error.message || '로그인에 실패했습니다.',
+          severity: 'error',
+        })
+      );
     }
   };
 
   return (
-    <Container maxWidth="sm">
-      <Box sx={{ mt: 8, mb: 4 }}>
-        <Paper elevation={3} sx={{ p: 4 }}>
-          <Typography variant="h4" component="h1" align="center" gutterBottom>
+    <Container component="main" maxWidth="xs">
+      <Box
+        sx={{
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Paper
+          elevation={3}
+          sx={{
+            padding: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            width: '100%',
+          }}
+        >
+          <Typography component="h1" variant="h5">
             로그인
           </Typography>
-          
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, width: '100%' }}>
             <TextField
               margin="normal"
               required
@@ -69,6 +103,8 @@ export default function Login() {
               autoFocus
               value={formData.username}
               onChange={handleChange}
+              error={!!errors.username}
+              helperText={errors.username}
             />
             <TextField
               margin="normal"
@@ -81,26 +117,28 @@ export default function Login() {
               autoComplete="current-password"
               value={formData.password}
               onChange={handleChange}
+              error={!!errors.password}
+              helperText={errors.password}
             />
             <Button
               type="submit"
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
+              disabled={loading}
             >
-              로그인
+              {loading ? '로그인 중...' : '로그인'}
             </Button>
-          </Box>
-
-          <SocialLoginButtons />
-
-          <Box sx={{ mt: 3, textAlign: 'center' }}>
-            <Link component={RouterLink} to="/register" variant="body2">
-              계정이 없으신가요? 회원가입
-            </Link>
+            <Box sx={{ textAlign: 'center' }}>
+              <Link component={RouterLink} to="/signup" variant="body2">
+                계정이 없으신가요? 회원가입
+              </Link>
+            </Box>
           </Box>
         </Paper>
       </Box>
     </Container>
   );
-} 
+};
+
+export default Login; 

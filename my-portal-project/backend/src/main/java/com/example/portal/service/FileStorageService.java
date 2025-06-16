@@ -1,31 +1,40 @@
 package com.example.portal.service;
 
-import com.example.portal.entity.Post;
-import com.example.portal.entity.PostFile;
+import com.example.portal.dto.FileMetadata;
+import com.example.portal.dto.FileValidation;
+import com.example.portal.dto.UploadOptimization;
+import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.List;
+
 public interface FileStorageService {
-    /**
-     * 파일을 저장하고 PostFile 엔티티를 생성합니다.
-     *
-     * @param file 저장할 파일
-     * @param post 연결할 게시글
-     * @return 생성된 PostFile 엔티티
-     */
-    PostFile storeFile(MultipartFile file, Post post);
+    FileMetadata storeFile(MultipartFile file) throws IOException;
 
-    /**
-     * 파일을 삭제합니다.
-     *
-     * @param fileName 삭제할 파일명
-     */
-    void deleteFile(String fileName);
+    Resource loadFileAsResource(String fileId) throws IOException;
 
-    /**
-     * 파일의 URL을 생성합니다.
-     *
-     * @param fileName 파일명
-     * @return 파일 URL
-     */
-    String getFileUrl(String fileName);
+    void deleteFile(String fileId) throws IOException;
+
+    boolean exists(String fileId);
+
+    long getFileSize(String fileId) throws IOException;
+
+    FileMetadata getFileMetadata(String fileId);
+
+    List<FileMetadata> getAllFiles();
+
+    void restoreFile(String fileId) throws IOException;
+
+    List<FileMetadata> searchFiles(String keyword);
+
+    byte[] getFileContent(String fileId) throws IOException;
+
+    void updateFileMetadata(FileMetadata metadata);
+
+    boolean isFileExists(String fileId);
+
+    FileValidation validateFile(String fileId);
+
+    UploadOptimization optimizeFile(String fileId) throws IOException;
 }

@@ -1,9 +1,9 @@
 package com.example.portal.config;
 
-import com.example.portal.security.CustomUserDetailsService;
 import com.example.portal.security.JwtAuthenticationFilter;
 import com.example.portal.security.OAuth2LoginFailureHandler;
 import com.example.portal.security.oauth2.CustomOAuth2UserService;
+import com.example.portal.security.user.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,7 +43,7 @@ public class SecurityConfig {
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
         private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
         private final CustomOAuth2UserService customOAuth2UserService;
-        private final CustomUserDetailsService userDetailsService;
+        private final UserDetailsServiceImpl userDetailsService;
 
         /**
          * 보안 필터 체인 설정
@@ -59,7 +59,18 @@ public class SecurityConfig {
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
+                                                .requestMatchers(
+                                                                "/api/auth/**",
+                                                                "/oauth2/**",
+                                                                "/swagger-ui/**",
+                                                                "/v3/api-docs/**",
+                                                                "/swagger-resources/**",
+                                                                "/webjars/**",
+                                                                "/static/**",
+                                                                "/css/**",
+                                                                "/js/**",
+                                                                "/images/**")
+                                                .permitAll()
                                                 .anyRequest().authenticated())
                                 .oauth2Login(oauth2 -> oauth2
                                                 .authorizationEndpoint(endpoint -> endpoint

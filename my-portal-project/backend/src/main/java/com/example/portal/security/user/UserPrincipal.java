@@ -63,4 +63,8 @@ public class UserPrincipal implements UserDetails {
     public User getUser() {
         return user;
     }
+
+    public static UserPrincipal create(User user) {
+        return new UserPrincipal(user);
+    }
 }

@@ -13,8 +13,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "categories")
 @Getter
-@Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 @EntityListeners(AuditingEntityListener.class)
@@ -26,13 +25,13 @@ public class Category extends BaseTimeEntity {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @Column(nullable = false)
+    @Column(length = 1000)
     private String description;
 
-    @Column(nullable = false)
-    private Integer displayOrder;
+    @Column(name = "display_order")
+    private int displayOrder;
 
-    @Column(nullable = false)
+    @Column(name = "is_active")
     private boolean isActive;
 
     @CreatedDate
@@ -44,11 +43,13 @@ public class Category extends BaseTimeEntity {
     private LocalDateTime updatedAt;
 
     @PrePersist
-    public void prePersist() {
-        if (this.displayOrder == null) {
-            this.displayOrder = 0;
+    protected void onCreate() {
+        if (displayOrder == 0) {
+            displayOrder = 0;
         }
-        this.isActive = true;
+        if (!isActive) {
+            isActive = true;
+        }
     }
 
     public void update(String name, String description, Integer displayOrder, boolean isActive) {

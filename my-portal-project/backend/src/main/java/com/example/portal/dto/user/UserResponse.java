@@ -29,6 +29,9 @@ public class UserResponse {
     @Schema(description = "소개", example = "안녕하세요, 홍길동입니다.")
     private String bio;
 
+    @Schema(description = "닉네임", example = "별명")
+    private String nickname;
+
     @Schema(description = "생성일시")
     private LocalDateTime createdAt;
 
@@ -39,6 +42,7 @@ public class UserResponse {
                 .email(user.getEmail())
                 .picture(user.getPicture())
                 .bio(user.getBio())
+                .nickname(user.getNickname())
                 .createdAt(user.getCreatedAt())
                 .build();
     }

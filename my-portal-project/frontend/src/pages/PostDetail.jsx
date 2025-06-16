@@ -1,126 +1,118 @@
 // src/pages/PostDetail.jsx
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import {
+  Container,
   Box,
-  Paper,
   Typography,
   Button,
-  IconButton,
+  Paper,
   Divider,
-  Chip,
-  CircularProgress,
-  Alert,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import {
-  ArrowBack as ArrowBackIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  ThumbUp as ThumbUpIcon,
-  Share as ShareIcon,
+  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
-import { getPost, deletePost, addLike, removeLike } from '../api/postApi';
-import CommentSection from '../components/CommentSection';
+import { fetchPost, deletePost } from '../store/slices/postSlice';
+import { showToast } from '../store/slices/uiSlice';
+import Loading from '../components/common/Loading';
+import CommentSection from '../components/comments/CommentSection';
 
-export default function PostDetail() {
+const PostDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [post, setPost] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [liked, setLiked] = useState(false);
+  const dispatch = useDispatch();
+  const { currentPost: post, loading, error } = useSelector((state) => state.posts);
+  const { user } = useSelector((state) => state.auth);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
-    fetchPost();
-  }, [id]);
+    dispatch(fetchPost(id));
+  }, [dispatch, id]);
 
-  const fetchPost = async () => {
-    try {
-      setLoading(true);
-      const data = await getPost(id);
-      setPost(data);
-      setLiked(data.liked);
-    } catch (err) {
-      setError("게시글을 불러오는데 실패했습니다.");
-    } finally {
-      setLoading(false);
-    }
+  const handleBack = () => {
+    navigate('/posts');
+  };
+
+  const handleEdit = () => {
+    navigate(`/posts/${id}/edit`);
   };
 
   const handleDelete = async () => {
-    if (window.confirm("정말로 이 게시글을 삭제하시겠습니까?")) {
-      try {
-        await deletePost(id);
-        navigate("/");
-      } catch (err) {
-        setError("게시글 삭제에 실패했습니다.");
-      }
-    }
-  };
-
-  const handleLike = async () => {
     try {
-      if (liked) {
-        await removeLike(id);
-      } else {
-        await addLike(id);
-      }
-      setLiked(!liked);
-      setPost(prev => ({
-        ...prev,
-        likeCount: liked ? prev.likeCount - 1 : prev.likeCount + 1
-      }));
-    } catch (err) {
-      setError("좋아요 처리에 실패했습니다.");
+      await dispatch(deletePost(id)).unwrap();
+      showToast('게시글이 삭제되었습니다.', 'success');
+      navigate('/posts');
+    } catch (error) {
+      showToast(error.message || '게시글 삭제에 실패했습니다.', 'error');
     }
-  };
-
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    alert("링크가 클립보드에 복사되었습니다.");
+    setDeleteDialogOpen(false);
   };
 
   if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <Loading />;
   }
 
   if (error) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="error">{error}</Alert>
-      </Box>
+      <Container>
+        <Box sx={{ mt: 4, textAlign: 'center' }}>
+          <Typography color="error">{error}</Typography>
+        </Box>
+      </Container>
     );
   }
 
   if (!post) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="info">게시글을 찾을 수 없습니다.</Alert>
-      </Box>
+      <Container>
+        <Box sx={{ mt: 4, textAlign: 'center' }}>
+          <Typography>게시글을 찾을 수 없습니다.</Typography>
+        </Box>
+      </Container>
     );
   }
 
   return (
-    <Box>
-      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate(-1)}
-        >
-          뒤로가기
-        </Button>
-        {user && user.id === post.author.id && (
-          <Box sx={{ display: 'flex', gap: 1 }}>
+    <Container>
+      <Box sx={{ mt: 4, mb: 4 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <IconButton onClick={handleBack} sx={{ mr: 2 }}>
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography variant="h4" component="h1">
+            {post.title}
+          </Typography>
+        </Box>
+
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+            <Typography variant="subtitle1">
+              작성자: {post.author}
+            </Typography>
+            <Typography variant="subtitle1">
+              작성일: {new Date(post.createdAt).toLocaleDateString()}
+            </Typography>
+          </Box>
+          <Divider sx={{ my: 2 }} />
+          <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+            {post.content}
+          </Typography>
+        </Paper>
+
+        {user && (user.id === post.authorId || user.role === 'ADMIN') && (
+          <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
             <Button
               variant="outlined"
               startIcon={<EditIcon />}
-              onClick={() => navigate(`/edit/${id}`)}
+              onClick={handleEdit}
             >
               수정
             </Button>
@@ -128,77 +120,35 @@ export default function PostDetail() {
               variant="outlined"
               color="error"
               startIcon={<DeleteIcon />}
-              onClick={handleDelete}
+              onClick={() => setDeleteDialogOpen(true)}
             >
               삭제
             </Button>
           </Box>
         )}
+
+        <CommentSection postId={id} />
       </Box>
 
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          {post.title}
-        </Typography>
-
-        <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Chip label={post.category} color="primary" size="small" />
-          <Typography variant="body2" color="text.secondary">
-            작성자: {post.author.username}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>게시글 삭제</DialogTitle>
+        <DialogContent>
+          <Typography>
+            정말로 이 게시글을 삭제하시겠습니까?
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            작성일: {new Date(post.createdAt).toLocaleDateString()}
-          </Typography>
-        </Box>
-
-        <Divider sx={{ my: 2 }} />
-
-        <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', mb: 3 }}>
-          {post.content}
-        </Typography>
-
-        {post.files && post.files.length > 0 && (
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle1" gutterBottom>
-              첨부파일
-            </Typography>
-            {post.files.map((file) => (
-              <Box
-                key={file.id}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  mb: 1,
-                }}
-              >
-                <a
-                  href={file.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ textDecoration: 'none' }}
-                >
-                  {file.originalName}
-                </a>
-              </Box>
-            ))}
-          </Box>
-        )}
-
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <IconButton onClick={handleLike} color={liked ? "primary" : "default"}>
-            <ThumbUpIcon />
-            <Typography variant="body2" sx={{ ml: 0.5 }}>
-              {post.likeCount}
-            </Typography>
-          </IconButton>
-          <IconButton onClick={handleShare}>
-            <ShareIcon />
-          </IconButton>
-        </Box>
-      </Paper>
-
-      <CommentSection postId={id} />
-    </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>취소</Button>
+          <Button onClick={handleDelete} color="error">
+            삭제
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
   );
-}
+};
+
+export default PostDetail;

@@ -1,18 +1,9 @@
 package com.example.portal.entity;
 
-// Lombok
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.ToString;
-import lombok.EqualsAndHashCode;
-
+import com.example.portal.entity.common.BaseTimeEntity;
+import com.example.portal.enums.Role;
 import jakarta.persistence.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,89 +15,56 @@ import java.util.List;
 @Entity
 @Table(name = "users")
 @Getter
-@Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@EntityListeners(AuditingEntityListener.class)
 public class User extends BaseTimeEntity implements UserDetails {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String email;
-
-    @Column(nullable = false)
-    private String password;
-
     @Column(nullable = false)
     private String name;
 
-    @Column
-    private String nickname;
+    @Column(nullable = false, unique = true)
+    private String email;
 
-    @Column
     private String picture;
 
-    @Column
+    @Column(length = 1000)
     private String bio;
 
-    @Column
-    private String profileImageUrl;
+    @Column(unique = true)
+    private String nickname;
 
-    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private UserRole role;
+    @Column(nullable = false)
+    private Role role;
 
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @LastModifiedDate
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
 
     @PrePersist
-    public void prePersist() {
-        if (this.role == null) {
-            this.role = UserRole.ROLE_USER;
-        }
-    }
-
-    public User update(String name, String nickname, String bio) {
-        this.name = name;
-        this.nickname = nickname;
-        this.bio = bio;
-        return this;
-    }
-
-    public void updatePassword(String password) {
-        this.password = password;
-    }
-
-    public void updateProfileImage(String profileImageUrl) {
-        this.profileImageUrl = profileImageUrl;
-    }
-
-    public void updateNickname(String nickname) {
-        this.nickname = nickname;
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+        return List.of(new SimpleGrantedAuthority(role.name()));
+    }
+
+    @Override
+    public String getPassword() {
+        return null;
     }
 
     @Override
     public String getUsername() {
         return email;
-    }
-
-    @Override
-    public String getPassword() {
-        return password;
     }
 
     @Override
@@ -127,5 +85,9 @@ public class User extends BaseTimeEntity implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public void updateLastLogin() {
+        this.lastLoginAt = LocalDateTime.now();
     }
 }

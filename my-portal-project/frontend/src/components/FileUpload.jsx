@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import {
   Box,
   Button,
@@ -10,6 +10,7 @@ import {
   Typography,
   LinearProgress,
   Paper,
+  Tooltip,
 } from '@mui/material';
 import {
   CloudUpload as CloudUploadIcon,
@@ -17,9 +18,17 @@ import {
   Image as ImageIcon,
   Description as DescriptionIcon,
   PictureAsPdf as PdfIcon,
+  Pause as PauseIcon,
+  PlayArrow as PlayIcon,
+  Cancel as CancelIcon,
 } from '@mui/icons-material';
+import axiosInstance from '../api/axiosConfig';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const CHUNK_SIZE = 1024 * 1024; // 1MB
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1초
+
 const ALLOWED_FILE_TYPES = [
   'image/jpeg',
   'image/png',
@@ -32,8 +41,10 @@ const ALLOWED_FILE_TYPES = [
 export default function FileUpload({ onFilesChange, existingFiles = [], onExistingFilesChange }) {
   const [files, setFiles] = useState([]);
   const [uploadProgress, setUploadProgress] = useState({});
+  const [uploadStatus, setUploadStatus] = useState({});
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
+  const uploadControllers = useRef({});
 
   const handleFileSelect = (event) => {
     const selectedFiles = Array.from(event.target.files);
@@ -54,16 +65,140 @@ export default function FileUpload({ onFilesChange, existingFiles = [], onExisti
     const newFiles = validFiles.map(file => ({
       file,
       preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+      id: Math.random().toString(36).substr(2, 9),
     }));
 
     setFiles(prev => [...prev, ...newFiles]);
     onFilesChange([...files, ...newFiles]);
   };
 
+  const uploadChunk = async (file, start, end, fileId, retryCount = 0) => {
+    const chunk = file.slice(start, end);
+    const formData = new FormData();
+    formData.append('file', chunk);
+    formData.append('fileName', file.name);
+    formData.append('fileId', fileId);
+    formData.append('chunkIndex', Math.floor(start / CHUNK_SIZE));
+    formData.append('totalChunks', Math.ceil(file.size / CHUNK_SIZE));
+
+    try {
+      await axiosInstance.post('/api/files/upload-chunk', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          const chunkProgress = (progressEvent.loaded / progressEvent.total) * 100;
+          const totalProgress = ((start + progressEvent.loaded) / file.size) * 100;
+          setUploadProgress(prev => ({
+            ...prev,
+            [fileId]: totalProgress,
+          }));
+        },
+      });
+    } catch (error) {
+      if (retryCount < MAX_RETRIES) {
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+        return uploadChunk(file, start, end, fileId, retryCount + 1);
+      }
+      throw error;
+    }
+  };
+
+  const uploadFile = async (fileData) => {
+    const { file, id: fileId } = fileData;
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    const controller = new AbortController();
+    uploadControllers.current[fileId] = controller;
+
+    try {
+      setUploadStatus(prev => ({
+        ...prev,
+        [fileId]: 'uploading',
+      }));
+
+      for (let start = 0; start < file.size; start += CHUNK_SIZE) {
+        if (uploadStatus[fileId] === 'paused') {
+          await new Promise(resolve => {
+            const checkStatus = setInterval(() => {
+              if (uploadStatus[fileId] !== 'paused') {
+                clearInterval(checkStatus);
+                resolve();
+              }
+            }, 100);
+          });
+        }
+
+        if (uploadStatus[fileId] === 'cancelled') {
+          throw new Error('Upload cancelled');
+        }
+
+        const end = Math.min(start + CHUNK_SIZE, file.size);
+        await uploadChunk(file, start, end, fileId);
+      }
+
+      // 업로드 완료 처리
+      await axiosInstance.post('/api/files/complete-upload', {
+        fileId,
+        fileName: file.name,
+        totalChunks,
+      });
+
+      setUploadStatus(prev => ({
+        ...prev,
+        [fileId]: 'completed',
+      }));
+    } catch (error) {
+      if (error.message !== 'Upload cancelled') {
+        setError(`파일 업로드 실패: ${error.message}`);
+      }
+      setUploadStatus(prev => ({
+        ...prev,
+        [fileId]: 'error',
+      }));
+    } finally {
+      delete uploadControllers.current[fileId];
+    }
+  };
+
+  const handleUpload = async () => {
+    for (const fileData of files) {
+      if (uploadStatus[fileData.id] !== 'completed') {
+        await uploadFile(fileData);
+      }
+    }
+  };
+
+  const handlePause = (fileId) => {
+    setUploadStatus(prev => ({
+      ...prev,
+      [fileId]: 'paused',
+    }));
+  };
+
+  const handleResume = (fileId) => {
+    setUploadStatus(prev => ({
+      ...prev,
+      [fileId]: 'uploading',
+    }));
+  };
+
+  const handleCancel = (fileId) => {
+    if (uploadControllers.current[fileId]) {
+      uploadControllers.current[fileId].abort();
+    }
+    setUploadStatus(prev => ({
+      ...prev,
+      [fileId]: 'cancelled',
+    }));
+  };
+
   const handleFileDelete = (index) => {
     const fileToDelete = files[index];
     if (fileToDelete.preview) {
       URL.revokeObjectURL(fileToDelete.preview);
+    }
+    if (uploadControllers.current[fileToDelete.id]) {
+      uploadControllers.current[fileToDelete.id].abort();
     }
     const newFiles = files.filter((_, i) => i !== index);
     setFiles(newFiles);
@@ -89,6 +224,38 @@ export default function FileUpload({ onFilesChange, existingFiles = [], onExisti
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const getStatusIcon = (fileId) => {
+    const status = uploadStatus[fileId];
+    switch (status) {
+      case 'paused':
+        return (
+          <Tooltip title="업로드 재개">
+            <IconButton onClick={() => handleResume(fileId)}>
+              <PlayIcon />
+            </IconButton>
+          </Tooltip>
+        );
+      case 'uploading':
+        return (
+          <Tooltip title="업로드 일시정지">
+            <IconButton onClick={() => handlePause(fileId)}>
+              <PauseIcon />
+            </IconButton>
+          </Tooltip>
+        );
+      case 'error':
+        return (
+          <Tooltip title="업로드 재시도">
+            <IconButton onClick={() => uploadFile(files.find(f => f.id === fileId))}>
+              <PlayIcon />
+            </IconButton>
+          </Tooltip>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <Box>
       <input
@@ -98,14 +265,23 @@ export default function FileUpload({ onFilesChange, existingFiles = [], onExisti
         style={{ display: 'none' }}
         ref={fileInputRef}
       />
-      <Button
-        variant="outlined"
-        startIcon={<CloudUploadIcon />}
-        onClick={() => fileInputRef.current.click()}
-        sx={{ mb: 2 }}
-      >
-        파일 선택
-      </Button>
+      <Box sx={{ mb: 2 }}>
+        <Button
+          variant="outlined"
+          startIcon={<CloudUploadIcon />}
+          onClick={() => fileInputRef.current.click()}
+          sx={{ mr: 1 }}
+        >
+          파일 선택
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleUpload}
+          disabled={files.length === 0}
+        >
+          업로드 시작
+        </Button>
+      </Box>
 
       {error && (
         <Typography color="error" sx={{ mb: 2 }}>
@@ -148,23 +324,46 @@ export default function FileUpload({ onFilesChange, existingFiles = [], onExisti
             새로 첨부할 파일
           </Typography>
           <List>
-            {files.map((file, index) => (
+            {files.map((fileData, index) => (
               <ListItem key={index}>
-                {file.preview ? (
+                {fileData.preview ? (
                   <img
-                    src={file.preview}
-                    alt={file.file.name}
+                    src={fileData.preview}
+                    alt={fileData.file.name}
                     style={{ width: 40, height: 40, objectFit: 'cover' }}
                   />
                 ) : (
-                  getFileIcon(file.file)
+                  getFileIcon(fileData.file)
                 )}
                 <ListItemText
-                  primary={file.file.name}
-                  secondary={formatFileSize(file.file.size)}
+                  primary={fileData.file.name}
+                  secondary={
+                    <Box>
+                      <Typography variant="body2">
+                        {formatFileSize(fileData.file.size)}
+                      </Typography>
+                      {uploadProgress[fileData.id] !== undefined && (
+                        <LinearProgress
+                          variant="determinate"
+                          value={uploadProgress[fileData.id]}
+                          sx={{ mt: 1 }}
+                        />
+                      )}
+                    </Box>
+                  }
                   sx={{ ml: 1 }}
                 />
                 <ListItemSecondaryAction>
+                  {getStatusIcon(fileData.id)}
+                  <Tooltip title="업로드 취소">
+                    <IconButton
+                      edge="end"
+                      aria-label="cancel"
+                      onClick={() => handleCancel(fileData.id)}
+                    >
+                      <CancelIcon />
+                    </IconButton>
+                  </Tooltip>
                   <IconButton
                     edge="end"
                     aria-label="delete"
@@ -176,17 +375,6 @@ export default function FileUpload({ onFilesChange, existingFiles = [], onExisti
               </ListItem>
             ))}
           </List>
-        </Box>
-      )}
-
-      {Object.keys(uploadProgress).length > 0 && (
-        <Box sx={{ mt: 2 }}>
-          {Object.entries(uploadProgress).map(([fileName, progress]) => (
-            <Box key={fileName} sx={{ mb: 1 }}>
-              <Typography variant="caption">{fileName}</Typography>
-              <LinearProgress variant="determinate" value={progress} />
-            </Box>
-          ))}
         </Box>
       )}
     </Box>

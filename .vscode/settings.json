@@ -10,7 +10,95 @@
       "editor.formatOnSave": true
     },
     "java.compile.nullAnalysis.mode": "automatic",
-    "files.autoSave": "onFocusChange"
+    "files.autoSave": "onFocusChange",
+
+    "java.configuration.runtimes": [
+      {
+        "name": "JavaSE-17",
+        "path": "C:/Program Files/Java/jdk-17", // 실제 JDK 경로로 수정
+        "default": true
+      }
+    ],
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.compile.nullAnalysis.nonnullByDefault": [
+      "com.example.portal"
+    ],
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.import.gradle.java.home": "C:/Program Files/Java/jdk-17", // 실제 JDK 경로로 수정
+    "java.import.maven.enabled": true,
+    "java.import.gradle.enabled": true,
+    "java.import.gradle.wrapper.enabled": true,
+    "java.import.gradle.version": "7.4.2",
+    "java.import.gradle.java.home": "C:/Program Files/Java/jdk-17", // 실제 JDK 경로로 수정
+    "java.project.referencedLibraries": [
+      "lib/**/*.jar"
+    ],
+    "java.compile.onSave.enabled": true,
+    "java.configuration.maven.userSettings": "",
+    "java.configuration.maven.globalSettings": "",
+    "java.configuration.maven.offline": false,
+    "java.configuration.maven.synchronize": true,
+    "java.configuration.maven.updateSnapshots": true,
+    "java.configuration.maven.updatePolicy": "always",
+    "java.configuration.maven.updatePolicyInterval": 1,
+    "java.configuration.maven.updatePolicyUnit": "days",
+    "java.configuration.maven.updatePolicyForce": false,
+    "java.configuration.maven.updatePolicyForceInterval": 1,
+    "java.configuration.maven.updatePolicyForceUnit": "days",
+    "java.configuration.maven.updatePolicyForceSnapshot": false,
+    "java.configuration.maven.updatePolicyForceSnapshotInterval": 1,
+    "java.configuration.maven.updatePolicyForceSnapshotUnit": "days",
+    "java.configuration.maven.updatePolicyForceRelease": false,
+    "java.configuration.maven.updatePolicyForceReleaseInterval": 1,
+    "java.configuration.maven.updatePolicyForceReleaseUnit": "days",
+    "java.configuration.maven.updatePolicyForcePlugin": false,
+    "java.configuration.maven.updatePolicyForcePluginInterval": 1,
+    "java.configuration.maven.updatePolicyForcePluginUnit": "days",
+    "java.configuration.maven.updatePolicyForcePluginSnapshot": false,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotInterval": 1,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotUnit": "days",
+    "java.configuration.maven.updatePolicyForcePluginRelease": false,
+    "java.configuration.maven.updatePolicyForcePluginReleaseInterval": 1,
+    "java.configuration.maven.updatePolicyForcePluginReleaseUnit": "days",
+    "java.configuration.maven.updatePolicyForcePluginSnapshotRelease": false,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleaseInterval": 1,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleaseUnit": "days",
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleaseSnapshot": false,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleaseSnapshotInterval": 1,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleaseSnapshotUnit": "days",
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleaseRelease": false,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleaseReleaseInterval": 1,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleaseReleaseUnit": "days",
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePlugin": false,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginInterval": 1,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginUnit": "days",
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshot": false,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotInterval": 1,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotUnit": "days",
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginRelease": false,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginReleaseInterval": 1,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginReleaseUnit": "days",
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotRelease": false,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotReleaseInterval": 1,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotReleaseUnit": "days",
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotReleaseSnapshot": false,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotReleaseSnapshotInterval": 1,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotReleaseSnapshotUnit": "days",
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotReleaseRelease": false,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotReleaseReleaseInterval": 1,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotReleaseReleaseUnit": "days",
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotReleasePlugin": false,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotReleasePluginInterval": 1,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotReleasePluginUnit": "days",
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotReleasePluginSnapshot": false,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotReleasePluginSnapshotInterval": 1,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotReleasePluginSnapshotUnit": "days",
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotReleasePluginRelease": false,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotReleasePluginReleaseInterval": 1,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotReleasePluginReleaseUnit": "days",
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotReleasePluginSnapshotRelease": false,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotReleasePluginSnapshotReleaseInterval": 1,
+    "java.configuration.maven.updatePolicyForcePluginSnapshotReleasePluginSnapshotReleasePluginSnapshotReleaseUnit": "days"
 }
 
   

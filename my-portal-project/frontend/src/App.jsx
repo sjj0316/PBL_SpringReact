@@ -1,79 +1,72 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider as MuiThemeProvider } from '@mui/material';
-import { useAuth } from './contexts/AuthContext';
-import { useTheme } from './contexts/ThemeContext';
-import Layout from './components/Layout';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import PostList from './pages/PostList';
-import PostWrite from './pages/PostWrite';
-import PostDetail from './pages/PostDetail';
-import OAuthCallback from './pages/OAuthCallback';
+import React, { Suspense, lazy } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import store from './store';
+import theme from './theme';
+import Navbar from './components/layout/Navbar';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import Loading from './components/ui/Loading';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 
-// 보호된 라우트 컴포넌트
-const ProtectedRoute = ({ children }) => {
-  const { user } = useAuth();
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-  return children;
-};
+// Lazy load components
+const Home = lazy(() => import('./components/Home'));
+const Login = lazy(() => import('./components/auth/Login'));
+const Signup = lazy(() => import('./components/auth/Signup'));
+const PostList = lazy(() => import('./components/post/PostList'));
+const PostDetail = lazy(() => import('./components/post/PostDetail'));
+const PostForm = lazy(() => import('./components/post/PostForm'));
+const Profile = lazy(() => import('./components/user/Profile'));
+const NotFound = lazy(() => import('./components/ui/NotFound'));
 
-// AppContent 컴포넌트
-const AppContent = () => {
-  const { theme } = useTheme();
-
+function App() {
   return (
-    <MuiThemeProvider theme={theme}>
-      <Router>
-        <Routes>
-          {/* 공개 라우트 */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/oauth/callback" element={<OAuthCallback />} />
-
-          {/* 보호된 라우트 */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <PostList />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/write"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <PostWrite />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/posts/:id"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <PostDetail />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </Router>
-    </MuiThemeProvider>
+    <Provider store={store}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Router>
+          <ErrorBoundary>
+            <Navbar />
+            <Suspense fallback={<Loading />}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/posts" element={<PostList />} />
+                <Route path="/posts/:id" element={<PostDetail />} />
+                <Route
+                  path="/posts/new"
+                  element={
+                    <ProtectedRoute>
+                      <PostForm />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/posts/:id/edit"
+                  element={
+                    <ProtectedRoute>
+                      <PostForm />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </ErrorBoundary>
+        </Router>
+      </ThemeProvider>
+    </Provider>
   );
-};
-
-// App 컴포넌트
-const App = () => {
-  return (
-    <AppContent />
-  );
-};
+}
 
 export default App;

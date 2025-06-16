@@ -1,10 +1,8 @@
 import axios from 'axios';
-import { getToken, refreshToken } from './authApi';
-
-const API_URL = 'http://localhost:8081';
 
 const axiosInstance = axios.create({
-  baseURL: API_URL,
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8080/api',
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -13,7 +11,7 @@ const axiosInstance = axios.create({
 // 요청 인터셉터
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = getToken();
+    const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -26,28 +24,21 @@ axiosInstance.interceptors.request.use(
 
 // 응답 인터셉터
 axiosInstance.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    // 토큰 만료로 인한 401 에러이고, 재시도하지 않은 요청인 경우
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        // 토큰 갱신
-        const newToken = await refreshToken();
-        
-        // 새로운 토큰으로 원래 요청 재시도
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        return axiosInstance(originalRequest);
-      } catch (refreshError) {
-        // 토큰 갱신 실패 시 로그아웃 처리
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response) {
+      // 401 Unauthorized 에러 처리
+      if (error.response.status === 401) {
+        localStorage.removeItem('token');
         window.location.href = '/login';
-        return Promise.reject(refreshError);
+      }
+      // 403 Forbidden 에러 처리
+      if (error.response.status === 403) {
+        window.location.href = '/forbidden';
       }
     }
-
     return Promise.reject(error);
   }
 );

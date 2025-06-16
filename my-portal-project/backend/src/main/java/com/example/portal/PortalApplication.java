@@ -10,7 +10,7 @@ import com.example.portal.config.JwtConfig;
  * 
  * @author portal-team
  * @version 1.0.0
- * @since 2024.03
+ * @since 2025.06
  */
 @SpringBootApplication
 @EnableConfigurationProperties(JwtConfig.class)

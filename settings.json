@@ -4,5 +4,5 @@
     "[java]": {
         "editor.suggest.snippetsPreventQuickSuggestions": false
     },
-    "java.jdt.ls.java.home": "C:\\Program Files\\Java\\jdk-21"
+    "java.jdt.ls.java.home": "C:\\Program Files\\Java\\jdk-17"
 } 

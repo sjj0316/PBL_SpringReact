@@ -19,26 +19,42 @@ async function handleResponse(response) {
     return response.json();
 }
 
+const API_BASE = '/api/comments';
+
 // 댓글 목록 조회
-export const getComments = async (postId) => {
-    const response = await axiosInstance.get(`/api/posts/${postId}/comments`);
+export const getComments = async (postId, params = {}) => {
+    const response = await axiosInstance.get(`${API_BASE}/post/${postId}`, { params });
     return response.data;
 };
 
 // 댓글 작성
-export const createComment = async (postId, commentData) => {
-    const response = await axiosInstance.post(`/api/posts/${postId}/comments`, commentData);
+export const createComment = async (postId, data) => {
+    const response = await axiosInstance.post(`${API_BASE}/post/${postId}`, data);
     return response.data;
 };
 
 // 댓글 수정
-export const updateComment = async (commentId, commentData) => {
-    const response = await axiosInstance.put(`/api/comments/${commentId}`, commentData);
+export const updateComment = async (commentId, data) => {
+    const response = await axiosInstance.put(`${API_BASE}/${commentId}`, data);
     return response.data;
 };
 
 // 댓글 삭제
 export const deleteComment = async (commentId) => {
-    const response = await axiosInstance.delete(`/api/comments/${commentId}`);
+    await axiosInstance.delete(`${API_BASE}/${commentId}`);
+};
+
+export const likeComment = async (commentId) => {
+    const response = await axiosInstance.post(`${API_BASE}/${commentId}/like`);
+    return response.data;
+};
+
+export const unlikeComment = async (commentId) => {
+    const response = await axiosInstance.delete(`${API_BASE}/${commentId}/like`);
+    return response.data;
+};
+
+export const reportComment = async (commentId, data) => {
+    const response = await axiosInstance.post(`${API_BASE}/${commentId}/report`, data);
     return response.data;
 };

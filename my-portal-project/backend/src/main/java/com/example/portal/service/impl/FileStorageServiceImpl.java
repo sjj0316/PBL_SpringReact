@@ -1,106 +1,168 @@
 package com.example.portal.service.impl;
 
-import com.example.portal.entity.Post;
-import com.example.portal.entity.PostFile;
-import com.example.portal.exception.FileStorageException;
+import com.example.portal.dto.FileMetadata;
+import com.example.portal.dto.FileValidation;
+import com.example.portal.dto.UploadOptimization;
 import com.example.portal.service.FileStorageService;
-import lombok.extern.slf4j.Slf4j;
+import com.example.portal.util.ImageCompressor;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Slf4j
 @Service
+@RequiredArgsConstructor
 public class FileStorageServiceImpl implements FileStorageService {
-
+    private static final Logger logger = LoggerFactory.getLogger(FileStorageServiceImpl.class);
+    private final ImageCompressor imageCompressor;
     private final Path fileStorageLocation;
-    private final long maxFileSize;
-    private final List<String> allowedFileTypes;
 
     public FileStorageServiceImpl(
-            @Value("${file.upload-dir}") String uploadDir,
-            @Value("${file.max-size:10485760}") long maxFileSize,
-            @Value("${file.allowed-types:image/jpeg,image/png,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document}") String allowedTypes) {
+            @Value("${file.upload.dir:uploads}") String uploadDir,
+            ImageCompressor imageCompressor) {
+        this.imageCompressor = imageCompressor;
         this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
-        this.maxFileSize = maxFileSize;
-        this.allowedFileTypes = Arrays.asList(allowedTypes.split(","));
         try {
             Files.createDirectories(this.fileStorageLocation);
-        } catch (IOException ex) {
-            throw new FileStorageException("파일 저장 디렉토리를 생성할 수 없습니다.", ex);
+            logger.info("File storage location created at: {}", this.fileStorageLocation);
+        } catch (IOException e) {
+            logger.error("Failed to create file storage directory", e);
+            throw new RuntimeException("Failed to create file storage directory", e);
         }
     }
 
     @Override
-    public PostFile storeFile(MultipartFile file, Post post) {
+    public FileMetadata storeFile(MultipartFile file) throws IOException {
         String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
-        String fileExtension = getFileExtension(originalFileName);
-        String storedFileName = UUID.randomUUID().toString() + fileExtension;
+        if (originalFileName.contains("..")) {
+            throw new IOException("Invalid file path sequence " + originalFileName);
+        }
 
-        try {
-            if (file.isEmpty()) {
-                throw new FileStorageException("빈 파일은 업로드할 수 없습니다: " + originalFileName);
-            }
+        String fileId = UUID.randomUUID().toString();
+        Path targetLocation = this.fileStorageLocation.resolve(fileId);
 
-            if (originalFileName.contains("..")) {
-                throw new FileStorageException("파일명에 잘못된 문자가 포함되어 있습니다: " + originalFileName);
-            }
-
-            if (file.getSize() > maxFileSize) {
-                throw new FileStorageException("파일 크기가 제한을 초과했습니다: " + originalFileName);
-            }
-
-            if (!allowedFileTypes.contains(file.getContentType())) {
-                throw new FileStorageException("허용되지 않는 파일 형식입니다: " + originalFileName);
-            }
-
-            Path targetLocation = this.fileStorageLocation.resolve(storedFileName);
-            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-
-            PostFile postFile = new PostFile();
-            postFile.setOriginalName(originalFileName);
-            postFile.setStoredName(storedFileName);
-            postFile.setUrl(getFileUrl(storedFileName));
-            postFile.setFileType(file.getContentType());
-            postFile.setFileSize(file.getSize());
-            postFile.setPost(post);
-
-            return postFile;
-
-        } catch (IOException ex) {
-            throw new FileStorageException("파일을 저장할 수 없습니다: " + originalFileName, ex);
+        try (InputStream inputStream = file.getInputStream()) {
+            Files.copy(inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING);
+            logger.info("File stored successfully: {}", fileId);
+            return new FileMetadata(fileId, originalFileName);
+        } catch (IOException e) {
+            logger.error("Failed to store file: {}", originalFileName, e);
+            throw new IOException("Failed to store file " + originalFileName, e);
         }
     }
 
     @Override
-    public void deleteFile(String fileName) {
+    public Resource loadFileAsResource(String fileId) throws IOException {
         try {
-            Path filePath = this.fileStorageLocation.resolve(fileName);
+            Path filePath = this.fileStorageLocation.resolve(fileId).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (resource.exists()) {
+                logger.debug("File resource loaded: {}", fileId);
+                return resource;
+            } else {
+                logger.error("File not found: {}", fileId);
+                throw new IOException("File not found " + fileId);
+            }
+        } catch (MalformedURLException e) {
+            logger.error("Invalid file path: {}", fileId, e);
+            throw new IOException("Invalid file path " + fileId, e);
+        }
+    }
+
+    @Override
+    public void deleteFile(String fileId) throws IOException {
+        Path filePath = this.fileStorageLocation.resolve(fileId).normalize();
+        try {
             Files.deleteIfExists(filePath);
-        } catch (IOException ex) {
-            throw new FileStorageException("파일을 삭제할 수 없습니다: " + fileName, ex);
+            logger.info("File deleted: {}", fileId);
+        } catch (IOException e) {
+            logger.error("Failed to delete file: {}", fileId, e);
+            throw new IOException("Failed to delete file " + fileId, e);
         }
     }
 
     @Override
-    public String getFileUrl(String fileName) {
-        return "/api/files/" + fileName;
+    public boolean exists(String fileId) {
+        Path filePath = this.fileStorageLocation.resolve(fileId).normalize();
+        return Files.exists(filePath);
     }
 
-    private String getFileExtension(String fileName) {
-        if (fileName == null || fileName.lastIndexOf(".") == -1) {
-            return "";
+    @Override
+    public long getFileSize(String fileId) throws IOException {
+        Path filePath = this.fileStorageLocation.resolve(fileId).normalize();
+        try {
+            return Files.size(filePath);
+        } catch (IOException e) {
+            logger.error("Failed to get file size: {}", fileId, e);
+            throw new IOException("Failed to get file size " + fileId, e);
         }
-        return fileName.substring(fileName.lastIndexOf("."));
+    }
+
+    @Override
+    public FileMetadata getFileMetadata(String fileId) {
+        // TODO: 파일 메타데이터 조회 구현
+        return null;
+    }
+
+    @Override
+    public List<FileMetadata> getAllFiles() {
+        // TODO: 모든 파일 목록 조회 구현
+        return new ArrayList<>();
+    }
+
+    @Override
+    public void restoreFile(String fileId) throws IOException {
+        // TODO: 파일 복원 구현
+    }
+
+    @Override
+    public List<FileMetadata> searchFiles(String keyword) {
+        // TODO: 파일 검색 구현
+        return new ArrayList<>();
+    }
+
+    @Override
+    public byte[] getFileContent(String fileId) throws IOException {
+        // TODO: 파일 내용 조회 구현
+        return new byte[0];
+    }
+
+    @Override
+    public void updateFileMetadata(FileMetadata metadata) {
+        // TODO: 파일 메타데이터 업데이트 구현
+    }
+
+    @Override
+    public boolean isFileExists(String fileId) {
+        return exists(fileId);
+    }
+
+    @Override
+    public FileValidation validateFile(String fileId) {
+        // TODO: 파일 유효성 검사 구현
+        return null;
+    }
+
+    @Override
+    public UploadOptimization optimizeFile(String fileId) throws IOException {
+        // TODO: 파일 최적화 구현
+        return null;
     }
 }
