@@ -8,7 +8,7 @@ import theme from './theme';
 import Navbar from './components/layout/Navbar';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Loading from './components/ui/Loading';
-import ErrorBoundary from './components/ui/ErrorBoundary';
+import ErrorBoundary from './components/error/ErrorBoundary';
 
 // Lazy load components
 const Home = lazy(() => import('./components/Home'));

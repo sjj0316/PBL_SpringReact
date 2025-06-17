@@ -21,9 +21,9 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.portal.security.oauth2.OAuth2LoginSuccessHandler;
-
-@SpringBootTest
+@SpringBootTest(properties = {
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration,org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration"
+})
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 public class OAuth2LoginTest {
@@ -33,12 +33,6 @@ public class OAuth2LoginTest {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private OAuth2LoginSuccessHandler successHandler;
-
-    @Autowired
-    private OAuth2LoginFailureHandler failureHandler;
 
     @BeforeEach
     void setUp() {

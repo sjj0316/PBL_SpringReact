@@ -1,6 +1,8 @@
 package com.example.portal.repository;
 
 import com.example.portal.entity.Post;
+import com.example.portal.entity.User;
+import com.example.portal.entity.Category;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -44,4 +46,18 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
         // 카테고리별 최근 게시물 조회
         Page<Post> findTop5ByCategoryNameOrderByCreatedAtDesc(String categoryName, Pageable pageable);
+
+        // 추가 메서드들
+        Page<Post> findByTitleContainingOrContentContaining(String title, String content, Pageable pageable);
+
+        Page<Post> findByCategoryAndTitleContainingOrCategoryAndContentContaining(
+                        Category category, String title, Category category2, String content, Pageable pageable);
+
+        Page<Post> findByUser(User user, Pageable pageable);
+
+        Page<Post> findByOrderByCreatedAtDesc(Pageable pageable);
+
+        Page<Post> findByOrderByViewCountDesc(Pageable pageable);
+
+        Page<Post> findByCategoryOrderByCreatedAtDesc(Category category, Pageable pageable);
 }

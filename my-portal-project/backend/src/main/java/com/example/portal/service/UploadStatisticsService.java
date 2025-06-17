@@ -18,7 +18,7 @@ public class UploadStatisticsService {
     private final FileUploadRetryService retryService;
 
     public UploadStatistics initializeStatistics(String uploadId) {
-        UploadStatistics stats = UploadStatistics.of(uploadId);
+        UploadStatistics stats = UploadStatistics.of(uploadId, "unknown", 0);
         statisticsMap.put(uploadId, stats);
         return stats;
     }

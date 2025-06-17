@@ -86,7 +86,7 @@ public class FileManagementController {
                         .body(resource);
             }
             return ResponseEntity.notFound().build();
-        } catch (MalformedURLException e) {
+        } catch (IOException e) {
             return ResponseEntity.badRequest().build();
         }
     }

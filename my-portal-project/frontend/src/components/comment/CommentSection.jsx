@@ -17,7 +17,7 @@ import {
   ThumbUp as ThumbUpIcon,
   ThumbUpOutlined as ThumbUpOutlinedIcon,
 } from '@mui/icons-material';
-import { fetchComments, createNewComment } from '../../store/slices/commentSlice';
+import { fetchComments, createComment } from '../../store/slices/commentSlice';
 import { showToast } from '../../store/slices/uiSlice';
 import CommentItem from './CommentItem';
 
@@ -67,7 +67,7 @@ const CommentSection = ({ postId }) => {
 
     try {
       await dispatch(
-        createNewComment({
+        createComment({
           postId,
           commentData: { content: comment },
         })

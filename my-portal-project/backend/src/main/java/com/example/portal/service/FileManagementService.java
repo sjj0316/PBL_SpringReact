@@ -38,9 +38,8 @@ public class FileManagementService {
         String fileType = file.getContentType();
         long fileSize = file.getSize();
 
-        String fileId = fileStorageService.storeFile(file);
-        FileMetadata metadata = FileMetadata.of(fileName, fileType, fileSize, uploadPath);
-        metadata.setFileId(fileId);
+        String fileId = fileStorageService.storeFile(file).getFileId();
+        FileMetadata metadata = FileMetadata.of(fileId, fileName, fileType, fileSize, uploadPath);
 
         fileMetadataMap.put(fileId, metadata);
         logger.info("File saved successfully: {}", fileId);
@@ -132,9 +131,17 @@ public class FileManagementService {
     public List<FileMetadata> searchFiles(String query) {
         return fileMetadataMap.values().stream()
                 .filter(metadata -> !metadata.isDeleted())
-                .filter(metadata -> metadata.getFileName().toLowerCase().contains(query.toLowerCase()) ||
-                        metadata.getDescription().toLowerCase().contains(query.toLowerCase()) ||
-                        metadata.getTags().toLowerCase().contains(query.toLowerCase()))
+                .filter(metadata -> {
+                    String fileName = metadata.getFileName() != null ? metadata.getFileName().toLowerCase() : "";
+                    String description = metadata.getDescription() != null ? metadata.getDescription().toLowerCase()
+                            : "";
+                    String tags = metadata.getTags() != null ? metadata.getTags().toLowerCase() : "";
+                    String queryLower = query.toLowerCase();
+
+                    return fileName.contains(queryLower) ||
+                            description.contains(queryLower) ||
+                            tags.contains(queryLower);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -168,5 +175,13 @@ public class FileManagementService {
                 .count());
         logger.debug("File statistics retrieved");
         return stats;
+    }
+
+    public Path getFilePath(String fileId) throws IOException {
+        FileMetadata metadata = fileMetadataMap.get(fileId);
+        if (metadata == null) {
+            throw new IOException("File metadata not found: " + fileId);
+        }
+        return fileStorageService.getFilePath(fileId);
     }
 }

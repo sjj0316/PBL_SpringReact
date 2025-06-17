@@ -1,5 +1,6 @@
 package com.example.portal.service.impl;
 
+import com.example.portal.dto.FileMetadata;
 import com.example.portal.entity.Post;
 import com.example.portal.entity.PostFile;
 import com.example.portal.repository.PostFileRepository;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -27,7 +29,23 @@ public class PostFileServiceImpl implements PostFileService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        return fileStorageService.storeFile(file, post);
+        try {
+            // FileStorageService에서 파일 저장
+            FileMetadata metadata = fileStorageService.storeFile(file);
+
+            // PostFile 엔티티 생성 및 저장
+            PostFile postFile = PostFile.builder()
+                    .originalName(file.getOriginalFilename())
+                    .storedName(metadata.getFileId())
+                    .fileType(file.getContentType())
+                    .fileSize(file.getSize())
+                    .post(post)
+                    .build();
+
+            return postFileRepository.save(postFile);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to save file", e);
+        }
     }
 
     @Override
@@ -41,8 +59,12 @@ public class PostFileServiceImpl implements PostFileService {
         PostFile postFile = postFileRepository.findById(fileId)
                 .orElseThrow(() -> new RuntimeException("File not found"));
 
-        fileStorageService.deleteFile(postFile.getStoredName());
-        postFileRepository.delete(postFile);
+        try {
+            fileStorageService.deleteFile(postFile.getStoredName());
+            postFileRepository.delete(postFile);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to delete file", e);
+        }
     }
 
     @Override

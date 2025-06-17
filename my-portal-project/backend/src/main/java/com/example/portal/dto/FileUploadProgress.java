@@ -18,6 +18,7 @@ public class FileUploadProgress {
     private LocalDateTime lastUpdateTime;
     private boolean completed;
     private String errorMessage;
+    private FileUploadStatus status;
 
     public static FileUploadProgress of(String uploadId, String fileName, long totalBytes) {
         return FileUploadProgress.builder()
@@ -28,23 +29,33 @@ public class FileUploadProgress {
                 .startTime(LocalDateTime.now())
                 .lastUpdateTime(LocalDateTime.now())
                 .completed(false)
+                .status(FileUploadStatus.PENDING)
                 .build();
     }
 
     public void updateProgress(long uploadedBytes) {
         this.uploadedBytes = uploadedBytes;
         this.lastUpdateTime = LocalDateTime.now();
+        this.status = FileUploadStatus.IN_PROGRESS;
     }
 
     public void complete() {
         this.completed = true;
         this.lastUpdateTime = LocalDateTime.now();
+        this.status = FileUploadStatus.COMPLETED;
     }
 
     public void fail(String errorMessage) {
         this.completed = true;
         this.errorMessage = errorMessage;
         this.lastUpdateTime = LocalDateTime.now();
+        this.status = FileUploadStatus.FAILED;
+    }
+
+    public void cancel() {
+        this.completed = true;
+        this.lastUpdateTime = LocalDateTime.now();
+        this.status = FileUploadStatus.CANCELLED;
     }
 
     public int getProgressPercentage() {

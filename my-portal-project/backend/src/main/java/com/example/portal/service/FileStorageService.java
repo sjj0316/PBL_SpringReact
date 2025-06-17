@@ -7,6 +7,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 public interface FileStorageService {
@@ -37,4 +38,6 @@ public interface FileStorageService {
     FileValidation validateFile(String fileId);
 
     UploadOptimization optimizeFile(String fileId) throws IOException;
+
+    Path getFilePath(String fileId) throws IOException;
 }

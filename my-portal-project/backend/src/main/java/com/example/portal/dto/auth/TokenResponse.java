@@ -20,6 +20,7 @@ public class TokenResponse {
     private String refreshToken;
 
     @Schema(description = "토큰 타입", example = "Bearer")
+    @Builder.Default
     private String tokenType = "Bearer";
 
     @Schema(description = "만료 시간(초)", example = "3600")

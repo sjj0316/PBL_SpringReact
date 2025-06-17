@@ -16,10 +16,14 @@ import java.util.List;
 public class UploadOptimization {
     private String optimizationId;
     private String uploadId;
-    private int chunkSize;
-    private int maxConcurrentUploads;
-    private long memoryLimit;
-    private List<OptimizationMetric> metrics;
+    @Builder.Default
+    private int chunkSize = 1024 * 1024; // 기본 1MB
+    @Builder.Default
+    private int maxConcurrentUploads = 3;
+    @Builder.Default
+    private long memoryLimit = 100 * 1024 * 1024; // 기본 100MB
+    @Builder.Default
+    private List<OptimizationMetric> metrics = new ArrayList<>();
     private String strategy;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -42,13 +46,6 @@ public class UploadOptimization {
         private LocalDateTime timestamp;
     }
 
-    public UploadOptimization() {
-        this.metrics = new ArrayList<>();
-        this.chunkSize = 1024 * 1024; // 기본 1MB
-        this.maxConcurrentUploads = 3;
-        this.memoryLimit = 100 * 1024 * 1024; // 기본 100MB
-    }
-
     public static UploadOptimization of(String fileId, long originalSize, long optimizedSize, String optimizationType) {
         return UploadOptimization.builder()
                 .fileId(fileId)
@@ -57,6 +54,14 @@ public class UploadOptimization {
                 .optimizationType(optimizationType)
                 .optimizationTime(LocalDateTime.now())
                 .success(true)
+                .build();
+    }
+
+    public static UploadOptimization of(String uploadId) {
+        return UploadOptimization.builder()
+                .uploadId(uploadId)
+                .optimizationTime(LocalDateTime.now())
+                .success(false)
                 .build();
     }
 
@@ -70,6 +75,9 @@ public class UploadOptimization {
     }
 
     public void addMetric(String name, double value, String unit) {
+        if (metrics == null) {
+            metrics = new ArrayList<>();
+        }
         metrics.add(new OptimizationMetric(name, value, unit, LocalDateTime.now()));
     }
 
@@ -99,6 +107,9 @@ public class UploadOptimization {
     }
 
     public double getAverageMetricValue(String metricName) {
+        if (metrics == null) {
+            return 0.0;
+        }
         return metrics.stream()
                 .filter(m -> m.getName().equals(metricName))
                 .mapToDouble(OptimizationMetric::getValue)
@@ -107,9 +118,16 @@ public class UploadOptimization {
     }
 
     public List<OptimizationMetric> getLatestMetrics(int count) {
+        if (metrics == null) {
+            return new ArrayList<>();
+        }
         return metrics.stream()
                 .sorted((m1, m2) -> m2.getTimestamp().compareTo(m1.getTimestamp()))
                 .limit(count)
                 .toList();
+    }
+
+    public String getOptimizationStrategy() {
+        return strategy;
     }
 }

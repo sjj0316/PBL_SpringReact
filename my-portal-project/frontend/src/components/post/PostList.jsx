@@ -14,7 +14,7 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { fetchPosts, setSearchKeyword, setCurrentPage } from '../../store/slices/postSlice';
+import { fetchPosts, searchPostsByKeyword } from '../../store/slices/postSlice';
 import { showToast } from '../../store/slices/uiSlice';
 
 const PostList = React.memo(() => {

@@ -45,4 +45,14 @@ public class FileUploadProgressService {
     public boolean isCancelled(String uploadId) {
         return Boolean.TRUE.equals(cancellationMap.get(uploadId));
     }
+
+    public boolean canResume(String uploadId) {
+        FileUploadProgress progress = progressMap.get(uploadId);
+        return progress != null && !isCancelled(uploadId);
+    }
+
+    public boolean canRestart(String uploadId) {
+        FileUploadProgress progress = progressMap.get(uploadId);
+        return progress != null && progress.getStatus() == FileUploadStatus.FAILED;
+    }
 }

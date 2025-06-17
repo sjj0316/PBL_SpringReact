@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,7 +21,6 @@ public class BatchUploadService {
     private final FileUploadProgressService progressService;
     private final FileUploadRetryService retryService;
     private final FileUploadPauseService pauseService;
-    private final ImageCompressor imageCompressor;
     private final UploadRateLimitService rateLimitService;
     private final UploadPriorityService priorityService;
 
@@ -73,10 +73,6 @@ public class BatchUploadService {
                     MultipartFile file = files.get(i);
                     String uploadId = batchId + "_" + i;
 
-                    if (request.isCompressImages() && isImageFile(file)) {
-                        file = imageCompressor.compressImage(file);
-                    }
-
                     try {
                         // 속도 제한 적용
                         rateLimitService.initializeRateLimiter(uploadId, request.getMaxConcurrentUploads());
@@ -109,10 +105,6 @@ public class BatchUploadService {
                 try {
                     MultipartFile file = files.get(index);
                     String uploadId = batchId + "_" + index;
-
-                    if (request.isCompressImages() && isImageFile(file)) {
-                        file = imageCompressor.compressImage(file);
-                    }
 
                     try {
                         // 속도 제한 적용
@@ -162,10 +154,6 @@ public class BatchUploadService {
         while (!taskQueue.isEmpty()) {
             UploadTask task = taskQueue.poll();
             try {
-                if (request.isCompressImages() && isImageFile(task.file)) {
-                    task.file = imageCompressor.compressImage(task.file);
-                }
-
                 // 속도 제한 적용
                 String uploadId = batchId + "_" + task.index;
                 rateLimitService.initializeRateLimiter(uploadId, request.getMaxConcurrentUploads());
@@ -264,11 +252,8 @@ public class BatchUploadService {
 
         @Override
         public int compareTo(UploadTask other) {
-            int priorityCompare = Integer.compare(other.priority, this.priority);
-            if (priorityCompare != 0) {
-                return priorityCompare;
-            }
-            return Long.compare(this.size, other.size);
+            // 우선순위가 높은 것이 먼저 처리되도록 함
+            return Integer.compare(other.priority, this.priority);
         }
     }
 }

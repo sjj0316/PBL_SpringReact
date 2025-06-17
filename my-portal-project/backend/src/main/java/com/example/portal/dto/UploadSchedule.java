@@ -13,10 +13,10 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UploadSchedule {
-    private Long scheduleId;
+    private String scheduleId;
     private String uploadId;
     private LocalDateTime scheduledTime;
-    private String type;
+    private ScheduleType type;
     private String status;
     private int retryCount;
     private String errorMessage;
@@ -35,7 +35,7 @@ public class UploadSchedule {
         schedule.setScheduleId(java.util.UUID.randomUUID().toString());
         schedule.setUploadId(uploadId);
         schedule.setScheduledTime(scheduledTime);
-        schedule.setType(type.name());
+        schedule.setType(type);
         schedule.setStatus("PENDING");
         schedule.setRetryCount(0);
         return schedule;

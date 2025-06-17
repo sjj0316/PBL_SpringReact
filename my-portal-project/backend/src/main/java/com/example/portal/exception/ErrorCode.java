@@ -23,6 +23,8 @@ public enum ErrorCode {
     // Post
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "Post not found"),
     POST_ACCESS_DENIED(HttpStatus.FORBIDDEN, "P002", "Post access denied"),
+    ALREADY_LIKED(HttpStatus.CONFLICT, "P003", "Already liked"),
+    LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "P004", "Like not found"),
 
     // Comment
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "CM001", "Comment not found"),

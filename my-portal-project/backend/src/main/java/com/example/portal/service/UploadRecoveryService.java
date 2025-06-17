@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -46,7 +47,6 @@ public class UploadRecoveryService {
 
                 if (success) {
                     recovery.completeRecovery();
-                    statisticsService.incrementRecoveryCount(recovery.getUploadId());
                 } else if (!recovery.canAttemptRecovery()) {
                     recovery.failRecovery("Max recovery attempts exceeded");
                 }
@@ -77,7 +77,7 @@ public class UploadRecoveryService {
         LocalDateTime threshold = LocalDateTime.now().minusDays(7);
         recoveryMap.entrySet().removeIf(entry -> {
             UploadRecovery recovery = entry.getValue();
-            return recovery.getStatus() == UploadRecovery.RecoveryStatus.COMPLETED &&
+            return recovery.getStatus() == UploadRecovery.RecoveryStatus.SUCCESS &&
                     recovery.getRecoveryTime().isBefore(threshold);
         });
     }
@@ -107,7 +107,7 @@ public class UploadRecoveryService {
         metrics.put("statusCounts", statusCounts);
 
         double successRate = allRecoveries.stream()
-                .filter(r -> r.getStatus() == UploadRecovery.RecoveryStatus.COMPLETED)
+                .filter(r -> r.getStatus() == UploadRecovery.RecoveryStatus.SUCCESS)
                 .count() / (double) allRecoveries.size() * 100;
         metrics.put("successRate", successRate);
 

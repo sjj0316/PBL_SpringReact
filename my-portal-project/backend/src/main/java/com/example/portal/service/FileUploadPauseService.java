@@ -28,7 +28,7 @@ public class FileUploadPauseService {
     public FileUploadPause pauseUpload(String uploadId, String reason) {
         FileUploadPause pause = pauseMap.get(uploadId);
         if (pause != null) {
-            pause = pause.pause(reason);
+            pause.pause(reason);
             pauseMap.put(uploadId, pause);
 
             // 진행률 업데이트
@@ -44,7 +44,7 @@ public class FileUploadPauseService {
     public FileUploadPause resumeUpload(String uploadId) {
         FileUploadPause pause = pauseMap.get(uploadId);
         if (pause != null) {
-            pause = pause.resume();
+            pause.resume();
             pauseMap.put(uploadId, pause);
 
             // 진행률 업데이트
@@ -59,7 +59,7 @@ public class FileUploadPauseService {
     public void updateUploadProgress(String uploadId, long bytesUploaded) {
         FileUploadPause pause = pauseMap.get(uploadId);
         if (pause != null) {
-            pause = pause.updateProgress(bytesUploaded);
+            pause.updateProgress(bytesUploaded);
             pauseMap.put(uploadId, pause);
         }
     }

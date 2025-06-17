@@ -13,7 +13,7 @@ import {
   IconButton,
 } from '@mui/material';
 import { Delete as DeleteIcon, Edit as EditIcon, ThumbUp as ThumbUpIcon } from '@mui/icons-material';
-import { fetchPost, deletePost, togglePostLike } from '../../store/slices/postSlice';
+import { fetchPost, deleteExistingPost, togglePostLike } from '../../store/slices/postSlice';
 import { showToast } from '../../store/slices/uiSlice';
 import CommentSection from '../comment/CommentSection';
 
@@ -39,7 +39,7 @@ const PostDetail = React.memo(() => {
   const handleDelete = useCallback(async () => {
     if (window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
       try {
-        await dispatch(deletePost(id)).unwrap();
+        await dispatch(deleteExistingPost(id)).unwrap();
         dispatch(showToast({ message: '게시글이 삭제되었습니다.', severity: 'success' }));
         navigate('/posts');
       } catch (error) {

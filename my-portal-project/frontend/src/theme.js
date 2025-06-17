@@ -22,4 +22,7 @@ const theme = createTheme({
   },
 });
 
+// 예시: 필요하다면 아래와 같이 추가
+// export const lightTheme = ...;
+// export const darkTheme = ...;
 export default theme; 

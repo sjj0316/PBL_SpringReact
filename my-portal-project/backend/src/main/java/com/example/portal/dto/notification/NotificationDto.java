@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class NotificationDto {
     private Long id;
+    private Long userId;
     private String title;
     private String content;
     private String type;

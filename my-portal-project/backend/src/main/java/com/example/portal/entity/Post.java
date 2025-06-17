@@ -46,12 +46,15 @@ public class Post extends BaseTimeEntity {
     private User user;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Comment> comments = new ArrayList<>();
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<PostFile> files = new ArrayList<>();
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private Set<PostLike> likes = new HashSet<>();
 
     @Column(nullable = false)
@@ -89,6 +92,12 @@ public class Post extends BaseTimeEntity {
     public void update(String title, String content) {
         this.title = title;
         this.content = content;
+    }
+
+    public void update(String title, String content, Category category) {
+        this.title = title;
+        this.content = content;
+        this.category = category;
     }
 
     public void addComment(Comment comment) {

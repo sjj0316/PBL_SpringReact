@@ -20,6 +20,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 
 import java.util.Arrays;
 
@@ -52,6 +55,7 @@ public class SecurityConfig {
          * - JWT 필터 등록
          */
         @Bean
+        @ConditionalOnBean(ClientRegistrationRepository.class)
         public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                 http
                                 .csrf(csrf -> csrf.disable())
@@ -80,6 +84,33 @@ public class SecurityConfig {
                                                 .userInfoEndpoint(endpoint -> endpoint
                                                                 .userService(customOAuth2UserService))
                                                 .failureHandler(oAuth2LoginFailureHandler))
+                                .authenticationProvider(authenticationProvider())
+                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+                return http.build();
+        }
+
+        @Bean
+        @ConditionalOnMissingBean(ClientRegistrationRepository.class)
+        public SecurityFilterChain filterChainWithoutOAuth2(HttpSecurity http) throws Exception {
+                http
+                                .csrf(csrf -> csrf.disable())
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers(
+                                                                "/api/auth/**",
+                                                                "/swagger-ui/**",
+                                                                "/v3/api-docs/**",
+                                                                "/swagger-resources/**",
+                                                                "/webjars/**",
+                                                                "/static/**",
+                                                                "/css/**",
+                                                                "/js/**",
+                                                                "/images/**")
+                                                .permitAll()
+                                                .anyRequest().authenticated())
                                 .authenticationProvider(authenticationProvider())
                                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

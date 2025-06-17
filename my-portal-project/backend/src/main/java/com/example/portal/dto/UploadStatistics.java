@@ -74,6 +74,12 @@ public class UploadStatistics {
         this.lastUpdateTime = LocalDateTime.now();
     }
 
+    public void updateProgress(long uploadedBytes, long totalBytes) {
+        this.uploadedBytes = uploadedBytes;
+        this.fileSize = totalBytes;
+        this.lastUpdateTime = LocalDateTime.now();
+    }
+
     public void complete() {
         this.completed = true;
         this.endTime = LocalDateTime.now();

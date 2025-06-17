@@ -4,9 +4,9 @@ import {
   signup as signupApi,
   logout as logoutApi,
   refreshToken as refreshTokenApi,
-  getCurrentUser as getCurrentUserApi,
-  updateProfile as updateProfileApi,
-  changePassword as changePasswordApi,
+  // getCurrentUser as getCurrentUserApi,
+  // updateProfile as updateProfileApi,
+  // changePassword as changePasswordApi,
 } from '../../api/authApi';
 
 const initialState = {
@@ -52,28 +52,28 @@ export const refreshToken = createAsyncThunk(
   }
 );
 
-export const getCurrentUser = createAsyncThunk(
-  'auth/getCurrentUser',
-  async () => {
-    const response = await getCurrentUserApi();
-    return response.data;
-  }
-);
+// export const getCurrentUser = createAsyncThunk(
+//   'auth/getCurrentUser',
+//   async () => {
+//     const response = await getCurrentUserApi();
+//     return response.data;
+//   }
+// );
 
-export const updateProfile = createAsyncThunk(
-  'auth/updateProfile',
-  async (userData) => {
-    const response = await updateProfileApi(userData);
-    return response.data;
-  }
-);
+// export const updateProfile = createAsyncThunk(
+//   'auth/updateProfile',
+//   async (userData) => {
+//     const response = await updateProfileApi(userData);
+//     return response.data;
+//   }
+// );
 
-export const changePassword = createAsyncThunk(
-  'auth/changePassword',
-  async (passwordData) => {
-    await changePasswordApi(passwordData);
-  }
-);
+// export const changePassword = createAsyncThunk(
+//   'auth/changePassword',
+//   async (passwordData) => {
+//     await changePasswordApi(passwordData);
+//   }
+// );
 
 const authSlice = createSlice({
   name: 'auth',
@@ -115,22 +115,11 @@ const authSlice = createSlice({
       })
       .addCase(refreshToken.fulfilled, (state, action) => {
         state.token = action.payload;
-      })
-      .addCase(getCurrentUser.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(getCurrentUser.fulfilled, (state, action) => {
-        state.loading = false;
-        state.user = action.payload;
-      })
-      .addCase(getCurrentUser.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message;
-      })
-      .addCase(updateProfile.fulfilled, (state, action) => {
-        state.user = action.payload;
       });
+      // .addCase(getCurrentUser.pending, ...)
+      // .addCase(getCurrentUser.fulfilled, ...)
+      // .addCase(getCurrentUser.rejected, ...)
+      // .addCase(updateProfile.fulfilled, ...)
   },
 });
 

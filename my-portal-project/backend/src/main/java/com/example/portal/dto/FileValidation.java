@@ -1,6 +1,5 @@
 package com.example.portal.dto;
 
-import com.example.portal.enums.ValidationStatus;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -43,11 +42,47 @@ public class FileValidation {
                 .build();
     }
 
+    public static FileValidation of(String fileId, String fileName, long fileSize, String fileType) {
+        return FileValidation.builder()
+                .validationId(java.util.UUID.randomUUID().toString())
+                .fileId(fileId)
+                .status(ValidationStatus.PENDING)
+                .startTime(LocalDateTime.now())
+                .results(new ArrayList<>())
+                .build();
+    }
+
     public void addResult(ValidationResult result) {
         if (results == null) {
             results = new ArrayList<>();
         }
         results.add(result);
+    }
+
+    public void addValidationResult(String checkName, boolean passed, String message) {
+        ValidationResult result = ValidationResult.builder()
+                .checkName(checkName)
+                .passed(passed)
+                .message(message)
+                .checkTime(LocalDateTime.now())
+                .build();
+        addResult(result);
+    }
+
+    public void startValidation() {
+        this.status = ValidationStatus.VALIDATING;
+        this.startTime = LocalDateTime.now();
+    }
+
+    public void completeValidation() {
+        this.status = ValidationStatus.VALID;
+        this.endTime = LocalDateTime.now();
+    }
+
+    public void failValidation(String errorMessage) {
+        this.status = ValidationStatus.INVALID;
+        this.errorMessage = errorMessage;
+        this.endTime = LocalDateTime.now();
     }
 
     public boolean isSafe() {

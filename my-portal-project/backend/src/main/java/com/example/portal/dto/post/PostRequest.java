@@ -19,6 +19,9 @@ public class PostRequest {
     @Schema(description = "게시글 내용", example = "게시글 내용입니다.")
     private String content;
 
+    @Schema(description = "카테고리 ID")
+    private Long categoryId;
+
     @Schema(description = "첨부파일 ID 목록")
     private List<Long> fileIds;
 }

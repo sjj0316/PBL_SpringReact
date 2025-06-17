@@ -1,10 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import {
-  getPosts,
-  getPost,
+  fetchPosts as fetchPostsApi,
+  fetchPost as fetchPostApi,
   createPost,
   updatePost,
-  deletePost,
+  deletePost as deletePostApi,
   likePost,
   unlikePost,
   searchPosts,
@@ -15,7 +15,7 @@ export const fetchPosts = createAsyncThunk(
   'post/fetchPosts',
   async (params, { rejectWithValue }) => {
     try {
-      const response = await getPosts(params);
+      const response = await fetchPostsApi(params);
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -27,7 +27,7 @@ export const fetchPost = createAsyncThunk(
   'post/fetchPost',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await getPost(id);
+      const response = await fetchPostApi(id);
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -63,7 +63,7 @@ export const deleteExistingPost = createAsyncThunk(
   'post/deletePost',
   async (id, { rejectWithValue }) => {
     try {
-      await deletePost(id);
+      await deletePostApi(id);
       return id;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);

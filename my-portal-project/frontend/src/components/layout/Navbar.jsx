@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { logout } from '../../store/slices/authSlice';
-import { setTheme } from '../../store/slices/uiSlice';
+import { toggleDarkMode } from '../../store/slices/uiSlice';
 import { showToast } from '../../store/slices/uiSlice';
 
 const Navbar = () => {
@@ -60,7 +60,7 @@ const Navbar = () => {
   };
 
   const handleThemeToggle = () => {
-    dispatch(setTheme(theme === 'light' ? 'dark' : 'light'));
+    dispatch(toggleDarkMode(theme === 'light' ? 'dark' : 'light'));
   };
 
   const pages = isAuthenticated

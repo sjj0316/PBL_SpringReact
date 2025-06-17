@@ -5,7 +5,6 @@ import com.example.portal.dto.FileValidation;
 import com.example.portal.dto.UploadOptimization;
 import com.example.portal.service.FileStorageService;
 import com.example.portal.util.ImageCompressor;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,7 +26,6 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class FileStorageServiceImpl implements FileStorageService {
     private static final Logger logger = LoggerFactory.getLogger(FileStorageServiceImpl.class);
     private final ImageCompressor imageCompressor;
@@ -60,7 +58,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         try (InputStream inputStream = file.getInputStream()) {
             Files.copy(inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING);
             logger.info("File stored successfully: {}", fileId);
-            return new FileMetadata(fileId, originalFileName);
+            return FileMetadata.of(fileId, originalFileName, file.getContentType(), file.getSize(), "/");
         } catch (IOException e) {
             logger.error("Failed to store file: {}", originalFileName, e);
             throw new IOException("Failed to store file " + originalFileName, e);
@@ -164,5 +162,15 @@ public class FileStorageServiceImpl implements FileStorageService {
     public UploadOptimization optimizeFile(String fileId) throws IOException {
         // TODO: 파일 최적화 구현
         return null;
+    }
+
+    @Override
+    public Path getFilePath(String fileId) throws IOException {
+        Path filePath = this.fileStorageLocation.resolve(fileId).normalize();
+        if (Files.exists(filePath)) {
+            return filePath;
+        } else {
+            throw new IOException("File not found: " + fileId);
+        }
     }
 }

@@ -1,7 +1,7 @@
 package com.example.portal.security;
 
 import com.example.portal.entity.User;
-import com.example.portal.entity.UserRole;
+import com.example.portal.enums.Role;
 import com.example.portal.security.user.UserDetailsServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +31,7 @@ class JwtTokenProviderTest {
                 .id(1L)
                 .email("test@example.com")
                 .password("password")
-                .role(UserRole.ROLE_USER)
+                .role(Role.ROLE_USER)
                 .build();
     }
 

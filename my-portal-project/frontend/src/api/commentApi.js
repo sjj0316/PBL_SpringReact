@@ -1,10 +1,11 @@
 // src/api/commentApi.js
 
 import axiosInstance from './axiosConfig';
+import { getToken } from './authApi';
 
-// JWT 토큰을 localStorage에서 꺼냄
+// JWT 토큰을 가져오는 함수
 function getAuthHeaders() {
-    const token = localStorage.getItem("token");
+    const token = getToken();
     return {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -28,33 +29,33 @@ export const getComments = async (postId, params = {}) => {
 };
 
 // 댓글 작성
-export const createComment = async (postId, data) => {
-    const response = await axiosInstance.post(`${API_BASE}/post/${postId}`, data);
+export const createComment = async (postId, content) => {
+    const response = await axiosInstance.post(`${API_BASE}/post/${postId}`, { content });
     return response.data;
 };
 
 // 댓글 수정
-export const updateComment = async (commentId, data) => {
-    const response = await axiosInstance.put(`${API_BASE}/${commentId}`, data);
+export const updateComment = async (postId, commentId, content) => {
+    const response = await axiosInstance.put(`${API_BASE}/post/${postId}/${commentId}`, { content });
     return response.data;
 };
 
 // 댓글 삭제
-export const deleteComment = async (commentId) => {
-    await axiosInstance.delete(`${API_BASE}/${commentId}`);
+export const deleteComment = async (postId, commentId) => {
+    await axiosInstance.delete(`${API_BASE}/post/${postId}/${commentId}`);
 };
 
-export const likeComment = async (commentId) => {
-    const response = await axiosInstance.post(`${API_BASE}/${commentId}/like`);
+export const likeComment = async (postId, commentId) => {
+    const response = await axiosInstance.post(`${API_BASE}/post/${postId}/${commentId}/like`);
     return response.data;
 };
 
-export const unlikeComment = async (commentId) => {
-    const response = await axiosInstance.delete(`${API_BASE}/${commentId}/like`);
+export const unlikeComment = async (postId, commentId) => {
+    const response = await axiosInstance.delete(`${API_BASE}/post/${postId}/${commentId}/like`);
     return response.data;
 };
 
-export const reportComment = async (commentId, data) => {
-    const response = await axiosInstance.post(`${API_BASE}/${commentId}/report`, data);
+export const reportComment = async (postId, commentId, reportData) => {
+    const response = await axiosInstance.post(`${API_BASE}/post/${postId}/${commentId}/report`, reportData);
     return response.data;
 };

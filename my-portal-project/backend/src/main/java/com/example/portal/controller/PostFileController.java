@@ -12,6 +12,7 @@ import com.example.portal.dto.UploadStatistics;
 import com.example.portal.dto.UploadRecovery;
 import com.example.portal.dto.FileValidation;
 import com.example.portal.dto.UploadOptimization;
+import com.example.portal.dto.ValidationStatus;
 import com.example.portal.entity.PostFile;
 import com.example.portal.service.BatchUploadService;
 import com.example.portal.service.FileStorageService;
@@ -26,7 +27,6 @@ import com.example.portal.service.UploadStatisticsService;
 import com.example.portal.service.UploadRecoveryService;
 import com.example.portal.service.FileValidationService;
 import com.example.portal.service.UploadOptimizationService;
-import com.example.portal.util.ImageCompressor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -120,13 +120,13 @@ public class PostFileController {
         return ResponseEntity.ok(files);
     }
 
-    @DeleteMapping("/{fileId}")
+    @DeleteMapping("/post/{fileId}")
     public ResponseEntity<Void> deleteFile(@PathVariable Long fileId) {
         postFileService.deleteFile(fileId);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{fileId}")
+    @GetMapping("/post/{fileId}")
     public ResponseEntity<PostFile> getFileById(@PathVariable Long fileId) {
         PostFile file = postFileService.getFileById(fileId);
         return ResponseEntity.ok(file);
@@ -134,25 +134,34 @@ public class PostFileController {
 
     @GetMapping("/download/{fileName:.+}")
     public ResponseEntity<Resource> downloadFile(@PathVariable String fileName) {
-        PostFile postFile = postFileService.getFileById(Long.parseLong(fileName));
-        Resource resource = fileStorageService.loadFileAsResource(postFile.getStoredName());
+        try {
+            PostFile postFile = postFileService.getFileById(Long.parseLong(fileName));
+            Resource resource = fileStorageService.loadFileAsResource(postFile.getStoredName());
 
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(postFile.getFileType()))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + postFile.getOriginalName() + "\"")
-                .body(resource);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(postFile.getFileType()))
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + postFile.getOriginalName() + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/preview/{fileName:.+}")
     public ResponseEntity<Resource> previewFile(@PathVariable String fileName) {
-        PostFile postFile = postFileService.getFileById(Long.parseLong(fileName));
-        Resource resource = fileStorageService.loadFileAsResource(postFile.getStoredName());
+        try {
+            PostFile postFile = postFileService.getFileById(Long.parseLong(fileName));
+            Resource resource = fileStorageService.loadFileAsResource(postFile.getStoredName());
 
-        if (postFile.getFileType().startsWith("image/")) {
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(postFile.getFileType()))
-                    .body(resource);
-        } else {
+            if (postFile.getFileType().startsWith("image/")) {
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(postFile.getFileType()))
+                        .body(resource);
+            } else {
+                return ResponseEntity.badRequest().build();
+            }
+        } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
@@ -439,7 +448,7 @@ public class PostFileController {
 
     @GetMapping("/validations")
     public ResponseEntity<List<FileValidation>> getValidations(
-            @RequestParam(value = "status", required = false) FileValidation.ValidationStatus status) {
+            @RequestParam(value = "status", required = false) ValidationStatus status) {
 
         if (status != null) {
             return ResponseEntity.ok(validationService.getValidationsByStatus(status));

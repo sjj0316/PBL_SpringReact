@@ -3,6 +3,7 @@ package com.example.portal.service;
 import com.example.portal.dto.notification.NotificationDto;
 import com.example.portal.entity.Notification;
 import com.example.portal.repository.NotificationRepository;
+import com.example.portal.service.impl.NotificationServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +26,7 @@ class NotificationServiceTest {
     private NotificationRepository notificationRepository;
 
     @InjectMocks
-    private NotificationService notificationService;
+    private NotificationServiceImpl notificationService;
 
     private Notification notification;
     private NotificationDto notificationDto;
@@ -43,6 +44,7 @@ class NotificationServiceTest {
 
         notificationDto = NotificationDto.builder()
                 .id(1L)
+                .userId(1L)
                 .title("테스트 알림")
                 .content("테스트 내용")
                 .type("SYSTEM")

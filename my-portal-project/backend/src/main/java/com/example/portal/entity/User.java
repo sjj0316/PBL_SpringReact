@@ -29,6 +29,9 @@ public class User extends BaseTimeEntity implements UserDetails {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(nullable = false)
+    private String password;
+
     private String picture;
 
     @Column(length = 1000)
@@ -37,6 +40,9 @@ public class User extends BaseTimeEntity implements UserDetails {
     @Column(unique = true)
     private String nickname;
 
+    @Column(name = "profile_image_url")
+    private String profileImageUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
@@ -44,12 +50,28 @@ public class User extends BaseTimeEntity implements UserDetails {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+    public User update(String name, String nickname, String picture) {
+        this.name = name;
+        this.nickname = nickname;
+        this.picture = picture;
+        return this;
     }
 
     @Override
@@ -59,7 +81,7 @@ public class User extends BaseTimeEntity implements UserDetails {
 
     @Override
     public String getPassword() {
-        return null;
+        return password;
     }
 
     @Override
@@ -89,5 +111,21 @@ public class User extends BaseTimeEntity implements UserDetails {
 
     public void updateLastLogin() {
         this.lastLoginAt = LocalDateTime.now();
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }

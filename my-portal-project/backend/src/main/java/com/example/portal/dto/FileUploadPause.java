@@ -26,6 +26,15 @@ public class FileUploadPause {
                 .build();
     }
 
+    public static FileUploadPause of(String uploadId, int progress, long totalBytes) {
+        return FileUploadPause.builder()
+                .uploadId(uploadId)
+                .paused(false)
+                .uploadedBytes(progress)
+                .totalBytes(totalBytes)
+                .build();
+    }
+
     public void pause(String reason) {
         this.paused = true;
         this.pauseTime = LocalDateTime.now();
@@ -36,6 +45,10 @@ public class FileUploadPause {
         this.paused = false;
         this.pauseTime = null;
         this.reason = null;
+    }
+
+    public void updateProgress(long uploadedBytes) {
+        this.uploadedBytes = uploadedBytes;
     }
 
     public int getProgressPercentage() {

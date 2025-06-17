@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { lightTheme, darkTheme } from '../theme';
+import theme from '../theme';
 
 const ThemeContext = createContext(null);
 
@@ -17,7 +17,7 @@ export function ThemeProvider({ children }) {
     setIsDarkMode(!isDarkMode);
   };
 
-  const theme = isDarkMode ? darkTheme : lightTheme;
+  const theme = isDarkMode ? theme.darkTheme : theme.lightTheme;
 
   return (
     <ThemeContext.Provider value={{ isDarkMode, toggleTheme, theme }}>

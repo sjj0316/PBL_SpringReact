@@ -29,7 +29,7 @@ public class CategoryResponse {
                 .id(category.getId())
                 .name(category.getName())
                 .description(category.getDescription())
-                .displayOrder(category.getDisplayOrder() != null ? category.getDisplayOrder() : 0)
+                .displayOrder(category.getDisplayOrder())
                 .isActive(category.isActive())
                 .build();
     }
